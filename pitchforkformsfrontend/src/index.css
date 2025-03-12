@@ -5,12 +5,21 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  background-image: url('./images/background.jpg');
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center center;
+  min-height: 100vh;
+}
+
+#mainTitle{
+  font-size: 500%;
+  padding-bottom: 0%;
 }
 
 a {
@@ -57,8 +66,14 @@ button:focus-visible {
   display: flex;
   justify-content: center; 
   align-items: center; 
-  height: 100vh; 
 }
+
+.swiper{
+  width: 70%;
+  height: auto;
+}
+
+
 
 @media (prefers-color-scheme: light) {
   :root {
