@@ -1,59 +1,93 @@
 import * as React from 'react';
-import Box from '@mui/material/Box';
-import Avatar from '@mui/material/Avatar';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import Tooltip from '@mui/material/Tooltip';
-import PersonAdd from '@mui/icons-material/PersonAdd';
-import Settings from '@mui/icons-material/Settings';
-import Logout from '@mui/icons-material/Logout';
-import { Button } from '@mui/material';
 import { useState } from 'react';
+import { AppBar, Toolbar, Box, Avatar, Menu, MenuItem, ListItemIcon, Divider, IconButton, Typography, Tooltip, Button } from '@mui/material';
+import Logout from '@mui/icons-material/Logout';
+import LoginModal from './LoginModal';
 
 export default function AccountMenu() {
-    const [anchorEl, setAnchorEl] = React.useState(null);
-    const [user, setUser] = useState(null)
-    const open = Boolean(anchorEl);
-    const handleClick = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
-    return (
-        <React.Fragment>
-            <Box sx={{ display: 'flex', alignItems: 'center', textAlign: 'center', justifyContent:'center', width:'100%', gap:'2'}}>
-                <Typography sx={{ minWidth: 100 }}>About</Typography>
-                <Typography sx={{ minWidth: 100 }}>Contact us</Typography>
-                {
-                    user !== null ? <Typography sx={{ minWidth: 100 }}>Profile</Typography> : <Button variant='outlined'>Login</Button>
-                }
-                {
-                    user !== null ? <Tooltip title="Account settings">
-                        <IconButton
-                            onClick={handleClick}
-                            size="small"
-                            sx={{ ml: 2 }}
-                            aria-controls={open ? 'account-menu' : undefined}
-                            aria-haspopup="true"
-                            aria-expanded={open ? 'true' : undefined}
-                        >
-                            <Avatar sx={{ width: 32, height: 32 }}>M</Avatar>
-                        </IconButton>
-                    </Tooltip> : null
-                }
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [user, setUser] = useState("null");
+    const [openLogin, setOpenLogin] = useState(false);
 
-            </Box>
+    const handleOpenLogin = () => setOpenLogin(true);
+    const handleCloseLogin = () => setOpenLogin(false);
+
+    const open = Boolean(anchorEl);
+    const handleClick = (event) => setAnchorEl(event.currentTarget);
+    const handleClose = () => setAnchorEl(null);
+
+    return (
+        <>
+            <AppBar
+                position="fixed"
+                sx={{
+                    background: 'linear-gradient(to bottom, rgba(50,50,50,0.8), rgba(30,30,30,0.6))',
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: 'none',
+                    zIndex: 1100,
+                }}
+            >
+                <Toolbar sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', px: 3 }}>
+                    {/* Navigation Links (Centered) */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
+                        <Typography
+                            variant="h6"
+                            sx={{ cursor: 'pointer', color: 'white', '&:hover': { opacity: 0.8 } }}
+                        >
+                            About
+                        </Typography>
+                        <Typography
+                            variant="h6"
+                            sx={{ cursor: 'pointer', color: 'white', '&:hover': { opacity: 0.8 } }}
+                        >
+                            Contact Us
+                        </Typography>
+
+                        {/* Login Button / Profile Section */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: '3rem' }}>
+                            {user ? (
+                                <>
+                                    <Typography
+                                        sx={{ color: 'white', cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
+                                    >
+                                        Profile
+                                    </Typography>
+                                    <Tooltip title="Account settings">
+                                        <IconButton onClick={handleClick} size="small">
+                                            <Avatar sx={{ width: 36, height: 36 }}>M</Avatar>
+                                        </IconButton>
+                                    </Tooltip>
+                                </>
+                            ) : (
+                                <Button
+                                    onClick={handleOpenLogin}
+                                    variant="contained"
+                                    sx={{
+                                        backgroundColor: '#ffffff',
+                                        color: '#333',
+                                        fontWeight: 'bold',
+                                        padding: '8px 20px',
+                                        borderRadius: '8px',
+                                        transition: '0.3s ease',
+                                        '&:hover': { backgroundColor: '#dddddd' },
+                                    }}
+                                >
+                                    Login
+                                </Button>
+                            )}
+                        </Box>
+                    </Box>
+                </Toolbar>
+            </AppBar>
+
+            {/* Space below navbar to prevent content from being hidden */}
+            <Box sx={{ height: 64 }} /> 
+
+            {/* Account Menu Dropdown */}
             <Menu
                 anchorEl={anchorEl}
-                id="account-menu"
                 open={open}
                 onClose={handleClose}
-                onClick={handleClose}
                 slotProps={{
                     paper: {
                         elevation: 0,
@@ -61,12 +95,9 @@ export default function AccountMenu() {
                             overflow: 'visible',
                             filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
                             mt: 1.5,
-                            '& .MuiAvatar-root': {
-                                width: 32,
-                                height: 32,
-                                ml: -0.5,
-                                mr: 1,
-                            },
+                            bgcolor: '#333',
+                            color: 'white',
+                            '& .MuiAvatar-root': { width: 32, height: 32, ml: -0.5, mr: 1 },
                             '&::before': {
                                 content: '""',
                                 display: 'block',
@@ -75,7 +106,7 @@ export default function AccountMenu() {
                                 right: 14,
                                 width: 10,
                                 height: 10,
-                                bgcolor: 'background.paper',
+                                bgcolor: '#333',
                                 transform: 'translateY(-50%) rotate(45deg)',
                                 zIndex: 0,
                             },
@@ -88,14 +119,20 @@ export default function AccountMenu() {
                 <MenuItem onClick={handleClose}>
                     <Avatar /> Profile
                 </MenuItem>
-                <Divider />
-                <MenuItem onClick={handleClose}>
+                <Divider sx={{ borderColor: 'grey' }} />
+                <MenuItem onClick={() => { 
+                    handleClose(); // Close menu first
+                    setUser(null); // Then log out
+                }}>
                     <ListItemIcon>
-                        <Logout fontSize="small" />
+                        <Logout fontSize="small" sx={{ color: 'white' }} />
                     </ListItemIcon>
                     Logout
                 </MenuItem>
             </Menu>
-        </React.Fragment>
+
+            {/* Login Modal */}
+            <LoginModal open={openLogin} handleClose={handleCloseLogin} />
+        </>
     );
 }
