@@ -1,14 +1,15 @@
 import React from 'react';
 import { Button, Typography, Box } from '@mui/material';
-import Carousel from './Carousel';
-import LoginModal from './LoginModal';
+import Carousel from '../Carousel';
+import LoginModal from '../LoginModal';
 import { useState } from 'react';
+import RegisterModal from '../RegisterModal';
 
 const MainPage = () => {
-    const [openLogin, setOpenLogin] = useState(false); // Manage the open/close state of the modal
+    const [openRegister, setOpenRegister] = useState(false); // Manage the open/close state of the modal
   
-    const handleOpenLogin = () => setOpenLogin(true);
-    const handleCloseLogin = () => setOpenLogin(false);
+    const handleOpenRegister = () => setOpenRegister(true);
+    const handleCloseRegister = () => setOpenRegister(false);
   
     return (
       <Box sx={{ textAlign: "center", padding: 3 }}>
@@ -26,14 +27,14 @@ const MainPage = () => {
           <Button
             variant="contained"
             size="large"
-            onClick={handleOpenLogin} // Open the modal when clicked
+            onClick={handleOpenRegister} // Open the modal when clicked
           >
             Get Started
           </Button>
         </Box>
   
         {/* Login Modal (Popup) */}
-        <LoginModal open={openLogin} handleClose={handleCloseLogin} />
+        <RegisterModal open={openRegister} handleClose={handleCloseRegister} />
       </Box>
     );
   };
