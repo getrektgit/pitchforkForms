@@ -23,7 +23,7 @@ const DefaultFormFormat = ({ index, saveQuestionAttribute, question }) => {
                 </AccordionDetails>
                 <AccordionDetails>
                     <Typography>Score</Typography>
-                    <Input type="number" onChange={(e) => { saveQuestionAttribute(index, "number", e.target.value) }} value={question.score} />
+                    <Input type="number" onChange={(e) => { saveQuestionAttribute(index, "score", e.target.value) }} value={question.score} />
                 </AccordionDetails>
             </Accordion>
             <br />
