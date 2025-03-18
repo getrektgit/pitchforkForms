@@ -7,18 +7,25 @@ const CreateFormPage = () => {
   const [questions, setQuestions] = useState([]);
 
   const handleAddQuestion = () => {
-    setQuestions(prevQuestions => [...prevQuestions, <DefaultFormFormat key={prevQuestions.length} />]);
+    setQuestions(prevQuestions => [...prevQuestions, { text: "", type: "radiobutton", score: 0 }]);
   };
+
+  const saveQuestionAttribute = (index, attribute, value) => {
+    const changedQuestions = questions
+    changedQuestions[index][attribute] = value
+
+    setQuestions(changedQuestions)
+  }
 
   return (
     <div>
       <div>
-        <Input sx={{ backgroundColor: "white", marginRight:1 }} placeholder='Name of the form' />
+        <Input sx={{ backgroundColor: "white", marginRight: 1 }} placeholder='Name of the form' />
         <Button variant='contained' sx={{ backgroundColor: "green" }}>Save</Button>
       </div>
-      <br/>
+      <br />
       {questions.map((question, index) => (
-        <div key={index}>{question}</div>
+        <DefaultFormFormat key={index} saveQuestionAttribute={saveQuestionAttribute} question={question}></DefaultFormFormat>
       ))}
       <Button onClick={handleAddQuestion} variant="contained">Add question</Button>
     </div>
