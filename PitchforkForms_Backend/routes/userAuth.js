@@ -11,7 +11,7 @@ const router = express.Router();
 router.use(cookieParser());
 
 
-const JWT_SECRET = process.env.SECRET_KEY || "your_secret_key";
+const JWT_SECRET = process.env.SECRET_KEY || "bdhfjsgdfgdfsgdfvbdgf";
 
 
 router.post("/register", async (req, res) => {
@@ -76,4 +76,17 @@ router.post("/login", (req, res) => {
     });
 });
 
+router.get("/users",(req,res)=>{
+    const sql_query = "SELECT id, email, username, role, profile_pic FROM users"
+    db.query(sql_query, async(err,results)=>{
+        if(err){
+            console.error("SQL error:",err)
+            res.status(500).json({message:"Szerverhiba!"})
+        }
+        if(results.length === 0){
+            return res.status(401).json({ message: "Nincs felhasználó a rendszerben!" });
+        }
+        res.json(results)
+    })
+})
 module.exports = router;
