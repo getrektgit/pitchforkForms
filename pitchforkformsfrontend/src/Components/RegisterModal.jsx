@@ -1,16 +1,58 @@
 import React, { useState } from 'react';
 import { Modal, Box, Typography, TextField, Button } from '@mui/material';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const RegisterModal = ({ open, handleClose }) => {
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [checkpassword, setCheckPassword] = useState('');
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    checkPassword: '',
+  });
 
-  const handleRegister = () => {
-    // Handle your register logic here
-    console.log("Register in with:", username, email, password);
-    handleClose(); // Close the modal after register attempt
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // Közös handleChange minden mezőre
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (formData.password !== formData.checkPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await axios.post('/auth/register', {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      navigate('/');
+      handleClose();
+    } catch (error) {
+      if (error.response) {
+        setError(error.response.data.message);
+      } else {
+        setError("An error occurred. Please try again later.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,67 +75,83 @@ const RegisterModal = ({ open, handleClose }) => {
           width: { xs: '90%', sm: '400px' },
         }}
       >
-        <Typography variant="h5" component="h2" gutterBottom textAlign="center" color='black'>
-          Register to Pitchfork Forms
-        </Typography>
+        <form onSubmit={handleSubmit}>
+          <Typography variant="h5" component="h2" gutterBottom textAlign="center" color='black'>
+            Register to Pitchfork Forms
+          </Typography>
 
-        <TextField
-          label="Username"
-          type="text"
-          variant="outlined"
-          fullWidth
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          sx={{ mb: 2 }}
-        />
-
-
-        <TextField
-          label="Email"
-          type="email"
-          variant="outlined"
-          fullWidth
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          sx={{ mb: 2 }}
-        />
-
-        <TextField
-          label="Password"
-          type="password"
-          variant="outlined"
-          fullWidth
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          sx={{ mb: 2 }}
-        />
-
-        <TextField
-          label="Check Password"
-          type="password"
-          variant="outlined"
-          fullWidth
-          value={checkpassword}
-          onChange={(e) => setCheckPassword(e.target.value)}
-          sx={{ mb: 2 }}
-        />
-
-        <Box sx={{ textAlign: 'center' }}>
-          <Button
-            variant="contained"
-            onClick={handleRegister}
+          <TextField
+            name="username"
+            label="Username"
+            type="text"
+            variant="outlined"
             fullWidth
-            sx={{
-              backgroundColor: "#1976D2",
-              padding: "12px",
-              fontSize: "1.1rem",
-              fontWeight: "bold",
-              "&:hover": { backgroundColor: "#135BA1" },
-            }}
-          >
-            Register
-          </Button>
-        </Box>
+            value={formData.username}
+            onChange={handleChange}
+            required
+            sx={{ mb: 2 }}
+          />
+
+          <TextField
+            name="email"
+            label="Email"
+            type="email"
+            variant="outlined"
+            fullWidth
+            value={formData.email}
+            onChange={handleChange}
+            required
+            sx={{ mb: 2 }}
+          />
+
+          <TextField
+            name="password"
+            label="Password"
+            type="password"
+            variant="outlined"
+            fullWidth
+            value={formData.password}
+            onChange={handleChange}
+            required
+            sx={{ mb: 2 }}
+          />
+
+          <TextField
+            name="checkPassword"
+            label="Confirm Password"
+            type="password"
+            variant="outlined"
+            fullWidth
+            value={formData.checkPassword}
+            onChange={handleChange}
+            required
+            sx={{ mb: 2 }}
+          />
+
+          {error && (
+            <Typography color="error" sx={{ mb: 2, textAlign: 'center' }}>
+              {error}
+            </Typography>
+          )}
+
+          <Box sx={{ textAlign: 'center' }}>
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              disabled={loading}
+              sx={{
+                backgroundColor: "#1976D2",
+                padding: "12px",
+                fontSize: "1.1rem",
+                fontWeight: "bold",
+                "&:hover": { backgroundColor: "#135BA1" },
+              }}
+            >
+              {loading ? "Registering..." : "Register"}
+            </Button>
+          </Box>
+        </form>
       </Box>
     </Modal>
   );
