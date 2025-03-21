@@ -6,7 +6,7 @@ import LoginModal from './LoginModal';
 
 export default function AccountMenu() {
     const [anchorEl, setAnchorEl] = useState(null);
-    const [user, setUser] = useState("null");
+    const [user, setUser] = useState(null);
     const [openLogin, setOpenLogin] = useState(false);
 
     const handleOpenLogin = () => setOpenLogin(true);
@@ -15,6 +15,19 @@ export default function AccountMenu() {
     const open = Boolean(anchorEl);
     const handleClick = (event) => setAnchorEl(event.currentTarget);
     const handleClose = () => setAnchorEl(null);
+
+    const handleLoginSuccess = (userData) => {
+        setUser(userData); 
+        setOpenLogin(false); 
+    };
+
+    const handleLogout = () => {
+        setUser(null);
+        handleClose();
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("rememberMe");
+        navigate("/")
+    };
 
     return (
         <>
@@ -28,7 +41,6 @@ export default function AccountMenu() {
                 }}
             >
                 <Toolbar sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', px: 3 }}>
-                    {/* Navigation Links (Centered) */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
                         <Typography
                             variant="h6"
@@ -43,18 +55,17 @@ export default function AccountMenu() {
                             Contact Us
                         </Typography>
 
-                        {/* Login Button / Profile Section */}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: '3rem' }}>
                             {user ? (
                                 <>
                                     <Typography
                                         sx={{ color: 'white', cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
                                     >
-                                        Profile
+                                        {user.username}
                                     </Typography>
                                     <Tooltip title="Account settings">
                                         <IconButton onClick={handleClick} size="small">
-                                            <Avatar sx={{ width: 36, height: 36 }}>M</Avatar>
+                                            <Avatar sx={{ width: 36, height: 36 }}>{user.username.charAt(0).toUpperCase()}</Avatar>
                                         </IconButton>
                                     </Tooltip>
                                 </>
@@ -80,10 +91,8 @@ export default function AccountMenu() {
                 </Toolbar>
             </AppBar>
 
-            {/* Space below navbar to prevent content from being hidden */}
-            <Box sx={{ height: 64 }} /> 
+            <Box sx={{ height: 64 }} />
 
-            {/* Account Menu Dropdown */}
             <Menu
                 anchorEl={anchorEl}
                 open={open}
@@ -120,10 +129,7 @@ export default function AccountMenu() {
                     <Avatar /> Profile
                 </MenuItem>
                 <Divider sx={{ borderColor: 'grey' }} />
-                <MenuItem onClick={() => { 
-                    handleClose(); // Close menu first
-                    setUser(null); // Then log out
-                }}>
+                <MenuItem onClick={handleLogout}>
                     <ListItemIcon>
                         <Logout fontSize="small" sx={{ color: 'white' }} />
                     </ListItemIcon>
@@ -131,8 +137,8 @@ export default function AccountMenu() {
                 </MenuItem>
             </Menu>
 
-            {/* Login Modal */}
-            <LoginModal open={openLogin} handleClose={handleCloseLogin} />
+            {/* Login Modal - átadjuk a loginSuccess callbacket */}
+            <LoginModal open={openLogin} handleClose={handleCloseLogin} onLoginSuccess={handleLoginSuccess} />
         </>
     );
 }
