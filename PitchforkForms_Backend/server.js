@@ -9,6 +9,16 @@ const cookieParser  = require("cookie-parser")
 dotenv.config()
 const app = express()
 
+app.use(cors({
+    origin:'http://localhost:5173',
+    methods:['GET','POST','PATH','PUT','DELETE','OPTIONS','HEAD'],
+    allowedHeaders:['Content-Type','Authorization'],
+    exposedHeaders:['Content-Length','X-Total-Count'],
+    credentials:true,
+    preflightContinue:false,
+    optionSuccessStatus:204
+}))
+
 app.use(express.json())
 app.use(cookieParser())
 app.use(cors());
