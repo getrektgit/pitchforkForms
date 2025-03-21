@@ -2,7 +2,7 @@ CREATE TABLE `users` (
   `id` integer PRIMARY KEY AUTO_INCREMENT,
   `email` varchar(255) NOT NULL,
   `username` varchar(255) NOT NULL,
-  `role` varchar(255) NOT NULL,
+  `role` enum('admin','student') NOT NULL,
   `password_hash` varchar(255) NOT NULL,
   `profile_pic` varchar(255)
 );
