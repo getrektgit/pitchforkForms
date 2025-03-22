@@ -7,7 +7,6 @@ import axios from "axios";
 const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
   const [openRegister, setOpenRegister] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
     email: "",
     password: "",
   });
@@ -38,33 +37,36 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError("");  // Clear previous errors
     setLoading(true);
-
+  
     try {
-      const response = await axios.post("/auth/login", formData, {
-        withCredentials: true,
-      });
-
-      localStorage.setItem("accessToken", response.data.accessToken);
-
+      const response = await axios.post("/auth/login", formData);
+  
+      // Backend token neve: token, nem accessToken
+      localStorage.setItem("accessToken", response.data.token);
+      console.log("Access token saved to localStorage");
+  
       if (rememberMe) {
         localStorage.setItem("rememberMe", "true");
+        console.log("Remember me enabled");
       } else {
         localStorage.removeItem("rememberMe");
+        console.log("Remember me disabled");
       }
-
+  
       if (onLoginSuccess) {
-        onLoginSuccess({ username: formData.username });
+        onLoginSuccess({ email: formData.email });
       }
-
-      navigate("/");
-      handleClose();
+  
+      navigate("/");  // Redirect after successful login
+      handleClose();  // Close modal
     } catch (error) {
+  
       if (error.response) {
-        setError(error.response.data.message);
+        setError(error.response.data.message || "Hibás adatokat adtál meg");
       } else if (error.request) {
-        setError("Nincs válasz, próbáld újra később");
+        setError("Hibás adatokat adtál meg");
       } else {
         setError("Hiba fordult elő, próbáld újra később");
       }
@@ -72,44 +74,34 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
       setLoading(false);
     }
   };
+  
 
   return (
     <>
-      <form onSubmit={handleSubmit}>
-        <Modal
-          open={open}
-          onClose={handleClose}
-          aria-labelledby="login-modal-title"
-          aria-describedby="login-modal-description"
+
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="login-modal-title"
+        aria-describedby="login-modal-description"
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: 'background.paper',
+            borderRadius: '8px',
+            boxShadow: 24,
+            padding: 4,
+            width: { xs: '90%', sm: '400px' },
+          }}
         >
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              bgcolor: 'background.paper',
-              borderRadius: '8px',
-              boxShadow: 24,
-              padding: 4,
-              width: { xs: '90%', sm: '400px' },
-            }}
-          >
+          <form onSubmit={handleSubmit}>
             <Typography variant="h5" component="h2" gutterBottom textAlign="center" color='black'>
               Login to Pitchfork Forms
             </Typography>
-
-            <TextField
-              name="username"
-              label="Username"
-              type="text"
-              variant="outlined"
-              fullWidth
-              value={formData.username}
-              onChange={handleChange}
-              required
-              sx={{ mb: 2 }}
-            />
 
             <TextField
               name="email"
@@ -186,9 +178,10 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
             >
               Don't have an account? Register here.
             </Typography>
-          </Box>
-        </Modal>
-      </form>
+          </form>
+        </Box>
+      </Modal>
+
 
       {/* Register Modal */}
       <RegisterModal open={openRegister} handleClose={handleCloseRegister} />

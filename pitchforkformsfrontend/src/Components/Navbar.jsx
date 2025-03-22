@@ -3,12 +3,15 @@ import { useState } from 'react';
 import { AppBar, Toolbar, Box, Avatar, Menu, MenuItem, ListItemIcon, Divider, IconButton, Typography, Tooltip, Button } from '@mui/material';
 import Logout from '@mui/icons-material/Logout';
 import LoginModal from './LoginModal';
+import { useNavigate } from 'react-router';
 
 export default function AccountMenu() {
     const [anchorEl, setAnchorEl] = useState(null);
     const [user, setUser] = useState(null);
     const [openLogin, setOpenLogin] = useState(false);
 
+    const navigate = useNavigate();
+    
     const handleOpenLogin = () => setOpenLogin(true);
     const handleCloseLogin = () => setOpenLogin(false);
 
@@ -17,8 +20,8 @@ export default function AccountMenu() {
     const handleClose = () => setAnchorEl(null);
 
     const handleLoginSuccess = (userData) => {
-        setUser(userData); 
-        setOpenLogin(false); 
+        setUser(userData);
+        setOpenLogin(false);
     };
 
     const handleLogout = () => {
@@ -61,11 +64,11 @@ export default function AccountMenu() {
                                     <Typography
                                         sx={{ color: 'white', cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
                                     >
-                                        {user.username}
+                                        {user.email}
                                     </Typography>
                                     <Tooltip title="Account settings">
                                         <IconButton onClick={handleClick} size="small">
-                                            <Avatar sx={{ width: 36, height: 36 }}>{user.username.charAt(0).toUpperCase()}</Avatar>
+                                            <Avatar sx={{ width: 36, height: 36 }}>{user.email.charAt(0).toUpperCase()}</Avatar>
                                         </IconButton>
                                     </Tooltip>
                                 </>

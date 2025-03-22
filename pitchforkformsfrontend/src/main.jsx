@@ -41,7 +41,7 @@ axios.interceptors.response.use(
           failedRequestsQueue = [];
 
           localStorage.removeItem('accessToken');
-          window.location.href = '/login';
+
           
           return Promise.reject(refreshError);
         } finally {
