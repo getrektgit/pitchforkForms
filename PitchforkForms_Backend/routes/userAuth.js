@@ -15,17 +15,18 @@ const JWT_SECRET = process.env.SECRET_KEY || "bdhfjsgdfgdfsgdfvbdgf";
 
 
 router.post("/register", async (req, res) => {
-    const { email, username, role, password } = req.body;
+    const { email, username, password, profile_pic } = req.body;
 
-    if (!email || !username || !role || !password) {
+    if (!email || !username || !password || !profile_pic) {
         return res.status(400).json({ message: "Minden mező kötelező!" });
     }
 
     try {
         const passwordHash = await bcrypt.hash(password, 10);
-        const sql = "INSERT INTO users (email, username, role, password_hash) VALUES (?, ?, ?, ?)";
+        const role = "student"
+        const sql = "INSERT INTO users (email, username, role, password_hash, profile_pic) VALUES (?, ?, ?, ?, ?)";
 
-        db.query(sql, [email, username, role, passwordHash], (err, result) => {
+        db.query(sql, [email, username, role, passwordHash, profile_pic], (err, result) => {
             if (err) {
                 console.error("SQL Error:", err);
                 return res.status(500).json({ message: "Szerverhiba!", error: err.sqlMessage });
