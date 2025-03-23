@@ -40,6 +40,7 @@ const RegisterModal = ({ open, handleClose }) => {
         username: formData.username,
         email: formData.email,
         password: formData.password,
+        profile_pic: "https://i.pravatar.cc/150?img=1",
       });
 
       navigate('/');

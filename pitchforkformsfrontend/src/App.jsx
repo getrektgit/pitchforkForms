@@ -25,7 +25,7 @@ function App() {
       handleOpenLogin();
       return null;
     }
-
+    
     return children;
   };
 
