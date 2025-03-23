@@ -4,6 +4,8 @@ const bcrypt = require("bcryptjs");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const db = require("../config/database");
+const authenticateToken = require("../middlewares/authMiddleware")
+const isAdmin = require("../middlewares/roleCheckMiddleware")
 
 dotenv.config()
 
@@ -89,5 +91,9 @@ router.get("/users",(req,res)=>{
         }
         res.json(results)
     })
+})
+
+router.get("/me", authenticateToken, isAdmin, (req,res)=>{
+    res.json({message:"Welcome admin!",user:req.user})
 })
 module.exports = router;

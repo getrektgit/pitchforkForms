@@ -3,7 +3,6 @@ const db = require("./config/database")
 const cors = require("cors");
 const dotenv = require("dotenv")
 const userAuth = require("./routes/userAuth")
-const authenticateToken = require("./middlewares/authMiddleware")
 const cookieParser  = require("cookie-parser")
 
 dotenv.config()
