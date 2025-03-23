@@ -25,7 +25,7 @@ function App() {
       handleOpenLogin();
       return null;
     }
-    
+
     return children;
   };
 
@@ -59,7 +59,6 @@ function App() {
           localStorage.removeItem('accessToken');
         }
       }
-
       setIsLoading(false);
     };
 
@@ -83,7 +82,9 @@ function App() {
 
   return (
     <Router>
-      <Navbar user={user} onLogout={handleLogout} />
+      <Navbar user={user}
+        onLogout={handleLogout}
+        onLoginSuccess={handleLoginSuccess} />
       <Routes>
         <Route path="/" element={<MainPage />} />
         <Route path="/admin" element={

@@ -5,13 +5,13 @@ import Logout from '@mui/icons-material/Logout';
 import LoginModal from './LoginModal';
 import { useNavigate } from 'react-router';
 
-export default function AccountMenu() {
+
+export default function AccountMenu({ user, onLogout, onLoginSuccess }) {
     const [anchorEl, setAnchorEl] = useState(null);
-    const [user, setUser] = useState(null);
     const [openLogin, setOpenLogin] = useState(false);
 
     const navigate = useNavigate();
-    
+
     const handleOpenLogin = () => setOpenLogin(true);
     const handleCloseLogin = () => setOpenLogin(false);
 
@@ -20,16 +20,14 @@ export default function AccountMenu() {
     const handleClose = () => setAnchorEl(null);
 
     const handleLoginSuccess = (userData) => {
-        setUser(userData);
+        onLoginSuccess(userData); 
         setOpenLogin(false);
     };
 
-    const handleLogout = () => {
-        setUser(null);
+    const handleLogoutClick = () => {
         handleClose();
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("rememberMe");
-        navigate("/")
+        onLogout(); 
+        navigate("/");
     };
 
     return (
@@ -61,17 +59,19 @@ export default function AccountMenu() {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: '3rem' }}>
                             {user ? (
                                 <>
-                                    <Typography
-                                        sx={{ color: 'white', cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
-                                    >
-                                        {user.email}
-                                    </Typography>
-                                    <Tooltip title="Account settings">
-                                        <IconButton onClick={handleClick} size="small">
-                                            <Avatar sx={{ width: 36, height: 36 }}>{user.email.charAt(0).toUpperCase()}</Avatar>
-                                        </IconButton>
-                                    </Tooltip>
-                                </>
+                                <Typography
+                                    sx={{ color: 'white', cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
+                                >
+                                    {user.username || user.email}
+                                </Typography>
+                                <Tooltip title="Account settings">
+                                    <IconButton onClick={handleClick} size="small">
+                                        <Avatar sx={{ width: 36, height: 36 }}>
+                                            {(user.username || user.email)?.charAt(0).toUpperCase()}
+                                        </Avatar>
+                                    </IconButton>
+                                </Tooltip>
+                            </>
                             ) : (
                                 <Button
                                     onClick={handleOpenLogin}
@@ -132,7 +132,7 @@ export default function AccountMenu() {
                     <Avatar /> Profile
                 </MenuItem>
                 <Divider sx={{ borderColor: 'grey' }} />
-                <MenuItem onClick={handleLogout}>
+                <MenuItem onClick={handleLogoutClick}>
                     <ListItemIcon>
                         <Logout fontSize="small" sx={{ color: 'white' }} />
                     </ListItemIcon>
@@ -140,7 +140,6 @@ export default function AccountMenu() {
                 </MenuItem>
             </Menu>
 
-            {/* Login Modal - átadjuk a loginSuccess callbacket */}
             <LoginModal open={openLogin} handleClose={handleCloseLogin} onLoginSuccess={handleLoginSuccess} />
         </>
     );
