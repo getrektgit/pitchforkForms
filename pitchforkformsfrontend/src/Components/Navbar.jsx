@@ -1,14 +1,14 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Box, Avatar, Menu, MenuItem, ListItemIcon, Divider, IconButton, Typography, Tooltip, Button } from '@mui/material';
 import Logout from '@mui/icons-material/Logout';
 import LoginModal from './LoginModal';
 import { useNavigate } from 'react-router';
 
-
 export default function AccountMenu({ user, onLogout, onLoginSuccess }) {
     const [anchorEl, setAnchorEl] = useState(null);
     const [openLogin, setOpenLogin] = useState(false);
+    const [currentUser, setCurrentUser] = useState(user);
 
     const navigate = useNavigate();
 
@@ -21,14 +21,26 @@ export default function AccountMenu({ user, onLogout, onLoginSuccess }) {
 
     const handleLoginSuccess = (userData) => {
         onLoginSuccess(userData); 
+        setCurrentUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
         setOpenLogin(false);
     };
 
     const handleLogoutClick = () => {
         handleClose();
         onLogout(); 
+        localStorage.removeItem('user');
+        setCurrentUser(null);
         navigate("/");
     };
+
+    useEffect(() => {
+
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            setCurrentUser(JSON.parse(storedUser));
+        }
+    }, []);
 
     return (
         <>
@@ -57,17 +69,17 @@ export default function AccountMenu({ user, onLogout, onLoginSuccess }) {
                         </Typography>
 
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: '3rem' }}>
-                            {user ? (
+                            {currentUser ? (
                                 <>
                                 <Typography
                                     sx={{ color: 'white', cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
                                 >
-                                    {user.username || user.email}
+                                    {currentUser.username || currentUser.email}
                                 </Typography>
                                 <Tooltip title="Account settings">
                                     <IconButton onClick={handleClick} size="small">
                                         <Avatar sx={{ width: 36, height: 36 }}>
-                                            {(user.username || user.email)?.charAt(0).toUpperCase()}
+                                            {(currentUser.username || currentUser.email)?.charAt(0).toUpperCase()}
                                         </Avatar>
                                     </IconButton>
                                 </Tooltip>
