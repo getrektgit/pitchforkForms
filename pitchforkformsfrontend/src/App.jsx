@@ -15,12 +15,11 @@ function App() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const handleOpenLogin = () => setOpenLogin(true);
   const handleCloseLogin = () => setOpenLogin(false);
 
   const ProtectedRoute = ({ children }) => {
     const accessToken = localStorage.getItem("accessToken");
-
+    console.log(accessToken)
     if (!accessToken) {
       return <Navigate to="/" replace />;
     }
@@ -32,7 +31,7 @@ function App() {
     const attemptAutoLogin = async () => {
       const rememberMe = localStorage.getItem("rememberMe");
       const accessToken = localStorage.getItem("accessToken");
-      
+
       if (rememberMe && !accessToken) {
         try {
           const response = await axios.post("/auth/refresh", {}, {
@@ -44,7 +43,9 @@ function App() {
           setUser({ username: response.data.username });
         } catch (error) {
           localStorage.removeItem('rememberMe');
+          console.log("autologin remove token 1")
           localStorage.removeItem('accessToken');
+          console.log(error)
         }
       } else if (accessToken) {
         try {
@@ -55,7 +56,8 @@ function App() {
           });
           setUser({ username: response.data.username });
         } catch (error) {
-          localStorage.removeItem('accessToken');
+          console.log(error)
+          console.log("autologin remove token 2")
         }
       }
       setIsLoading(false);

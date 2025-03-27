@@ -39,14 +39,15 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
     e.preventDefault();
     setError("");  // Clear previous errors
     setLoading(true);
-  
+
     try {
       const response = await axios.post("/auth/login", formData);
-  
+
       // Backend token neve: token, nem accessToken
       localStorage.setItem("accessToken", response.data.token);
       console.log("Access token saved to localStorage");
-  
+      const accessToken = localStorage.getItem("accessToken")
+      console.log(accessToken)
       if (rememberMe) {
         localStorage.setItem("rememberMe", "true");
         console.log("Remember me enabled");
@@ -54,15 +55,15 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
         localStorage.removeItem("rememberMe");
         console.log("Remember me disabled");
       }
-  
+
       if (onLoginSuccess) {
         onLoginSuccess({ email: formData.email });
       }
-  
+
       navigate("/");  // Redirect after successful login
       handleClose();  // Close modal
     } catch (error) {
-  
+
       if (error.response) {
         setError(error.response.data.message || "Hibás adatokat adtál meg");
       } else if (error.request) {
@@ -74,7 +75,7 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
       setLoading(false);
     }
   };
-  
+
 
   return (
     <>

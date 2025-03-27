@@ -11,7 +11,7 @@ dotenv.config()
 
 const router = express.Router();
 router.use(cookieParser());
-
+const activeRefreshTokens = new Set(); // itt tároljuk a tokeneket
 
 const JWT_SECRET = process.env.SECRET_KEY || "bdhfjsgdfgdfsgdfvbdgf";
 
@@ -68,7 +68,7 @@ router.post("/login", (req, res) => {
             return res.status(401).json({ message: "Hibás email vagy jelszó!" });
         }
 
-        
+
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
             JWT_SECRET,
@@ -79,21 +79,71 @@ router.post("/login", (req, res) => {
     });
 });
 
-router.get("/users",(req,res)=>{
+router.get("/users", (req, res) => {
     const sql_query = "SELECT id, email, username, role, profile_pic FROM users"
-    db.query(sql_query, async(err,results)=>{
-        if(err){
-            console.error("SQL error:",err)
-            res.status(500).json({message:"Szerverhiba!"})
+    db.query(sql_query, async (err, results) => {
+        if (err) {
+            console.error("SQL error:", err)
+            res.status(500).json({ message: "Szerverhiba!" })
         }
-        if(results.length === 0){
+        if (results.length === 0) {
             return res.status(401).json({ message: "Nincs felhasználó a rendszerben!" });
         }
         res.json(results)
     })
 })
 
-router.get("/me", authenticateToken, isAdmin, (req,res)=>{
-    res.json({message:"Welcome admin!",user:req.user})
+
+
+
+router.post("/refresh", (req, res) => {
+    console.log(req.cookies)
+    const oldRefreshToken = req.cookies.refreshToken;
+    if (!oldRefreshToken)
+        return res.status(401).json({ error: "No refresh token provided" });
+
+    // If token was already used, block reuse
+    if (!activeRefreshTokens.has(oldRefreshToken)) {
+        return res
+            .status(403)
+            .json({ error: "Token has already been used" });
+    }
+
+    jwt.verify(oldRefreshToken, process.env.REFRESH_SECRET, (err, user) => {
+        if (err)
+            return res
+                .status(403)
+                .json({ error: "Invalid refresh token" });
+
+        activeRefreshTokens.delete(oldRefreshToken);
+
+        const newAccessToken = jwt.sign(
+            { id: user.id, username: user.username },
+            process.env.SECRET_KEY,
+            { expiresIn: "15m" }
+        );
+        const newRefreshToken = jwt.sign(
+            { id: user.id, username: user.username },
+            process.env.REFRESH_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        activeRefreshTokens.add(newRefreshToken);
+        res.cookie("refreshToken", newRefreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "Strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+        res.json({ accessToken: newAccessToken });
+    });
+});
+
+
+
+
+
+router.get("/me", authenticateToken, isAdmin, (req, res) => {
+    res.json({ message: "Welcome admin!", user: req.user })
 })
 module.exports = router;
