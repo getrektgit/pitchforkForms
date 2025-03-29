@@ -1,6 +1,6 @@
 import Navbar from '../src/Components/Navbar';
 import './App.css';
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import MainPage from './Components/Pages/MainPage';
 import AdminPage from './Components/Pages/AdminPage';
 import StudentPage from './Components/Pages/StudentPage';
@@ -22,10 +22,9 @@ function App() {
     const accessToken = localStorage.getItem("accessToken");
 
     if (!accessToken) {
-      handleOpenLogin();
-      return null;
+      return <Navigate to="/" replace />;
     }
-    
+
     return children;
   };
 
@@ -33,7 +32,7 @@ function App() {
     const attemptAutoLogin = async () => {
       const rememberMe = localStorage.getItem("rememberMe");
       const accessToken = localStorage.getItem("accessToken");
-
+      
       if (rememberMe && !accessToken) {
         try {
           const response = await axios.post("/auth/refresh", {}, {
@@ -59,7 +58,6 @@ function App() {
           localStorage.removeItem('accessToken');
         }
       }
-
       setIsLoading(false);
     };
 
@@ -83,7 +81,9 @@ function App() {
 
   return (
     <Router>
-      <Navbar user={user} onLogout={handleLogout} />
+      <Navbar user={user}
+        onLogout={handleLogout}
+        onLoginSuccess={handleLoginSuccess} />
       <Routes>
         <Route path="/" element={<MainPage />} />
         <Route path="/admin" element={
@@ -108,7 +108,7 @@ function App() {
         } />
       </Routes>
 
-      {/* Login Modal globálisan */}
+      {/* Login Modal globally */}
       <LoginModal open={openLogin} handleClose={handleCloseLogin} onLoginSuccess={handleLoginSuccess} />
     </Router>
   );
