@@ -37,16 +37,20 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");  // Clear previous errors
+    setError(""); // Clear previous errors
     setLoading(true);
-  
+
     try {
-      const response = await axios.post("/auth/login", formData);
-  
-      // Backend token neve: token, nem accessToken
+      // Send login request to the backend
+      const response = await axios.post("/auth/login", formData, {
+        withCredentials: true, // Ensure cookies are sent and received
+      });
+
+      // Store the access token in localStorage
       localStorage.setItem("accessToken", response.data.token);
       console.log("Access token saved to localStorage");
-  
+
+      // Handle "Remember Me" functionality
       if (rememberMe) {
         localStorage.setItem("rememberMe", "true");
         console.log("Remember me enabled");
@@ -54,31 +58,34 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
         localStorage.removeItem("rememberMe");
         console.log("Remember me disabled");
       }
-  
+
+      // Call the onLoginSuccess callback to update the user state
       if (onLoginSuccess) {
-        onLoginSuccess({ email: formData.email });
+        onLoginSuccess({
+          id: response.data.id,
+          email: formData.email,
+          username: response.data.username,
+          role: response.data.role, // Ensure role is included
+        });
       }
-  
-      navigate("/");  // Redirect after successful login
-      handleClose();  // Close modal
+
+      navigate("/"); // Redirect after successful login
+      handleClose(); // Close modal
     } catch (error) {
-  
       if (error.response) {
-        setError(error.response.data.message || "Hibás adatokat adtál meg");
+        setError(error.response.data.message || "Invalid credentials provided");
       } else if (error.request) {
-        setError("Hibás adatokat adtál meg");
+        setError("No response from server. Please try again later.");
       } else {
-        setError("Hiba fordult elő, próbáld újra később");
+        setError("An error occurred. Please try again later.");
       }
     } finally {
       setLoading(false);
     }
   };
-  
 
   return (
     <>
-
       <Modal
         open={open}
         onClose={handleClose}
@@ -181,7 +188,6 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
           </form>
         </Box>
       </Modal>
-
 
       {/* Register Modal */}
       <RegisterModal open={openRegister} handleClose={handleCloseRegister} />

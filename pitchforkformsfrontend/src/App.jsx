@@ -9,6 +9,7 @@ import FormPage from './Components/Pages/FormPage';
 import LoginModal from './Components/LoginModal';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import UserProfile from './Components/Pages/UserProfile';
 
 function App() {
   const [openLogin, setOpenLogin] = useState(false);
@@ -19,45 +20,76 @@ function App() {
   const handleCloseLogin = () => setOpenLogin(false);
 
   const ProtectedRoute = ({ children }) => {
-    const accessToken = localStorage.getItem("accessToken");
-
-    if (!accessToken) {
+    if (!user) {
       return <Navigate to="/" replace />;
     }
-
     return children;
   };
 
   useEffect(() => {
     const attemptAutoLogin = async () => {
       const rememberMe = localStorage.getItem("rememberMe");
-      const accessToken = localStorage.getItem("accessToken");
-      
+      let accessToken = localStorage.getItem("accessToken");
+
       if (rememberMe && !accessToken) {
         try {
           const response = await axios.post("/auth/refresh", {}, {
             withCredentials: true
           });
 
-          localStorage.setItem('accessToken', response.data.accessToken);
+          accessToken = response.data.accessToken;
+          localStorage.setItem('accessToken', accessToken);
           localStorage.setItem('rememberMe', "true");
-          setUser({ username: response.data.username });
+          setUser({
+            id: response.data.id,
+            username: response.data.username,
+            email: response.data.email,
+          });
         } catch (error) {
+          console.error("Error during token refresh:", error);
           localStorage.removeItem('rememberMe');
           localStorage.removeItem('accessToken');
         }
-      } else if (accessToken) {
+      }
+
+      if (accessToken) {
         try {
           const response = await axios.get('/auth/me', {
             headers: {
               Authorization: `Bearer ${accessToken}`,
             },
           });
-          setUser({ username: response.data.username });
+          setUser({
+            id: response.data.id,
+            username: response.data.username,
+            email: response.data.email,
+          });
         } catch (error) {
-          localStorage.removeItem('accessToken');
+          if (error.response && error.response.status === 401) {
+            // Token expired, attempt to refresh
+            try {
+              const refreshResponse = await axios.post("/auth/refresh", {}, {
+                withCredentials: true
+              });
+
+              const newAccessToken = refreshResponse.data.accessToken;
+              localStorage.setItem('accessToken', newAccessToken);
+              setUser({
+                id: refreshResponse.data.id,
+                username: refreshResponse.data.username,
+                email: refreshResponse.data.email,
+              });
+            } catch (refreshError) {
+              console.error("Error during token refresh after expiration:", refreshError);
+              localStorage.removeItem('accessToken');
+              localStorage.removeItem('rememberMe');
+            }
+          } else {
+            console.error("Error during user authentication:", error);
+          }
         }
       }
+
       setIsLoading(false);
     };
 
@@ -81,9 +113,11 @@ function App() {
 
   return (
     <Router>
-      <Navbar user={user}
+      <Navbar
+        user={user}
         onLogout={handleLogout}
-        onLoginSuccess={handleLoginSuccess} />
+        onLoginSuccess={handleLoginSuccess}
+      />
       <Routes>
         <Route path="/" element={<MainPage />} />
         <Route path="/admin" element={
@@ -106,10 +140,15 @@ function App() {
             <FormPage />
           </ProtectedRoute>
         } />
+        <Route path="/user/profile/:id" element={<UserProfile />} />
       </Routes>
 
       {/* Login Modal globally */}
-      <LoginModal open={openLogin} handleClose={handleCloseLogin} onLoginSuccess={handleLoginSuccess} />
+      <LoginModal
+        open={openLogin}
+        handleClose={handleCloseLogin}
+        onLoginSuccess={handleLoginSuccess}
+      />
     </Router>
   );
 }

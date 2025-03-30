@@ -4,6 +4,7 @@ import { AppBar, Toolbar, Box, Avatar, Menu, MenuItem, ListItemIcon, Divider, Ic
 import Logout from '@mui/icons-material/Logout';
 import LoginModal from './LoginModal';
 import { useNavigate } from 'react-router';
+import axios from 'axios';
 
 export default function AccountMenu({ user, onLogout, onLoginSuccess }) {
     const [anchorEl, setAnchorEl] = useState(null);
@@ -27,15 +28,20 @@ export default function AccountMenu({ user, onLogout, onLoginSuccess }) {
     };
 
     const handleLogoutClick = () => {
+        try {
+            axios.post('/auth/logout', {}, { withCredentials: true })
+        } catch (error) {
+            console.error("Error during logout:", error);
+        }
         handleClose();
         onLogout(); 
         localStorage.removeItem('user');
+        localStorage.removeItem('accessToken');
         setCurrentUser(null);
         navigate("/");
     };
 
     useEffect(() => {
-
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
             setCurrentUser(JSON.parse(storedUser));
@@ -140,7 +146,7 @@ export default function AccountMenu({ user, onLogout, onLoginSuccess }) {
                 transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-                <MenuItem onClick={handleClose}>
+                <MenuItem onClick={() => { handleClose(); navigate(`/user/profile/${currentUser.id}`); }}>
                     <Avatar /> Profile
                 </MenuItem>
                 <Divider sx={{ borderColor: 'grey' }} />

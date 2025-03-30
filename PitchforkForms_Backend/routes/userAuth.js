@@ -106,7 +106,7 @@ router.get("/users",(req,res)=>{
 })
 
 //PROTECTED ROUTE (ADMIN ONLY)
-router.get("/me", authenticateToken, isAdmin, (req,res)=>{
+router.get("/me", authenticateToken, /*isAdmin,*/ (req,res)=>{
     res.json({message:"Welcome admin!",user:req.user})
 })
 
@@ -158,6 +158,7 @@ router.post("/logout",(req,res)=>{
     res.clearCookie("refreshToken")
     res.json({message:"Logged out successfully!"})
 })
+
 //UPDATE USER
 router.put("/users/:id", authenticateToken, async (req, res) => {
     const userId = req.params.id;
