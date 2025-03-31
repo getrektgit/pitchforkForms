@@ -106,7 +106,7 @@ router.get("/users",(req,res)=>{
 })
 
 //PROTECTED ROUTE (ADMIN ONLY)
-router.get("/me", authenticateToken, isAdmin, (req,res)=>{
+router.get("/me", authenticateToken, /*isAdmin,*/ (req,res)=>{
     res.json({message:"Welcome admin!",user:req.user})
 })
 
@@ -171,7 +171,7 @@ router.put("/users/:id", authenticateToken, async (req, res) => {
         const sql = "UPDATE users SET email = ?, username = ?, profile_pic = ? WHERE id = ?";
         const values = [email, username, profile_pic || null, userId];
 
-        const [result] = await db.execute(sql, values);
+        const result = await db.execute(sql, values);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Felhasználó nem található!" });
@@ -185,12 +185,12 @@ router.put("/users/:id", authenticateToken, async (req, res) => {
 });
 
 //DELETE USER
-router.delete("/users/:id", authenticateToken,isAdmin, async (req, res) => {
+router.delete("/users/:id",authenticateToken,isAdmin,  async (req, res) => {
     const userId = req.params.id;
 
     try {
         const sql = "DELETE FROM users WHERE id = ?";
-        const [result] = await db.execute(sql, [userId]);
+        const result = await db.execute(sql, [userId]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Felhasználó nem található!" });

@@ -4,6 +4,7 @@ const cors = require("cors");
 const dotenv = require("dotenv")
 const userAuth = require("./routes/userAuth")
 const cookieParser  = require("cookie-parser")
+const formRoutes = require("./routes/formRoutes")
 
 dotenv.config()
 const app = express()
@@ -23,6 +24,7 @@ app.use(cookieParser())
 app.use(cors());
 
 app.use('/auth',userAuth)
+app.use('/form',formRoutes)
 
 
 const PORT = process.env.PORT || 3000;
