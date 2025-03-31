@@ -158,6 +158,7 @@ router.post("/logout",(req,res)=>{
     res.clearCookie("refreshToken")
     res.json({message:"Logged out successfully!"})
 })
+
 //UPDATE USER
 router.put("/users/:id", authenticateToken, async (req, res) => {
     const userId = req.params.id;
