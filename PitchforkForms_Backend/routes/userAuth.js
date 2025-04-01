@@ -107,7 +107,17 @@ router.get("/users", (req, res) => {
 
 //PROTECTED ROUTE (ADMIN ONLY)
 router.get("/me", authenticateToken, /*isAdmin,*/(req, res) => {
-    res.json({ message: "Welcome admin!", user: req.user })
+    const sql_query = "SELECT role FROM users WHERE id = " + req.user.id
+    db.query(sql_query, async (err, results) => {
+        if (err) {
+            console.error("SQL error:", err)
+            res.status(500).json({ message: "Szerverhiba!" })
+        }
+        if (results.length === 0) {
+            return res.status(401).json({ message: "Nincs felhasználó a rendszerben!" });
+        }
+        res.json({ message: "Welcome admin!", user: req.user, role: results[0].role })
+    })
 })
 
 
@@ -146,7 +156,7 @@ router.post("/refresh", (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000,
         })
 
-        const sql_query = "SELECT email FROM users WHERE id = " + user.id
+        const sql_query = "SELECT email,role FROM users WHERE id = " + user.id
         db.query(sql_query, async (err, results) => {
             if (err) {
                 console.error("SQL error:", err)
@@ -155,7 +165,8 @@ router.post("/refresh", (req, res) => {
             if (results.length === 0) {
                 return res.status(401).json({ message: "Nincs felhasználó a rendszerben!" });
             }
-            res.json({ token: newAccessToken, id: user.id, username: user.username, email: results[0].email })
+
+            res.json({ token: newAccessToken, id: user.id, username: user.username, email: results[0].email})
         })
     })
 })
@@ -214,4 +225,5 @@ router.delete("/users/:id", authenticateToken, isAdmin, async (req, res) => {
         res.status(500).json({ message: "Szerverhiba!", error: error.sqlMessage });
     }
 });
+
 module.exports = router;

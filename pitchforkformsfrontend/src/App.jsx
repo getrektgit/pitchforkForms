@@ -19,11 +19,12 @@ function App() {
   const handleCloseLogin = () => setOpenLogin(false);
 
   const ProtectedRoute = ({ children, allowedRoles }) => {
-    const role = "admin"
+    const role = user.role;
     if (!user) {
       return <Navigate to="/" replace />;
+
     }
-    if (allowedRoles.includes(role)) {
+    if (allowedRoles && !allowedRoles.includes(role)) {
       return children;
     }
     return <Navigate to="/" replace />;
@@ -47,7 +48,9 @@ function App() {
             id: response.data.id,
             username: response.data.username,
             email: response.data.email,
+            role: response.data.role,
           });
+
         } catch (error) {
           console.error("Error during token refresh:", error);
           localStorage.removeItem('rememberMe');
@@ -66,6 +69,7 @@ function App() {
             id: response.data.id,
             username: response.data.username,
             email: response.data.email,
+            role: response.data.role,
           });
         } catch (error) {
           if (error.response && error.response.status === 401) {
@@ -81,6 +85,7 @@ function App() {
                 id: refreshResponse.data.id,
                 username: refreshResponse.data.username,
                 email: refreshResponse.data.email,
+                role: refreshResponse.data.role,
               });
             } catch (refreshError) {
               console.error("Error during token refresh after expiration:", refreshError);
