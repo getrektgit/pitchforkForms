@@ -6,7 +6,9 @@ const authenticateToken = require("../middlewares/authMiddleware")
 dotenv.config()
 const router = express.Router()
 
-
+//KETTŐ KÜLÖN GETRE SZÉTSZEDNI
+//1.get form alap adatok pl: name meg creator id meg form id meg ilyenek
+//2.get /forms/get post-al hívom meg hogy paramétert lehessen neki adni annak adok egy id-t és annak a formnak az id alapján lekéri az összes adatát
 router.get("/forms", authenticateToken, (req, res) => {
     db.query("SELECT * FROM forms", (err, forms) => {
         if (err) {

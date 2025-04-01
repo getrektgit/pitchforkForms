@@ -16,14 +16,17 @@ function App() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const handleOpenLogin = () => setOpenLogin(true);
   const handleCloseLogin = () => setOpenLogin(false);
 
-  const ProtectedRoute = ({ children }) => {
+  const ProtectedRoute = ({ children, allowedRoles }) => {
+    const role = "admin"
     if (!user) {
       return <Navigate to="/" replace />;
     }
-    return children;
+    if (allowedRoles.includes(role)) {
+      return children;
+    }
+    return <Navigate to="/" replace />;
   };
 
   useEffect(() => {
@@ -121,26 +124,31 @@ function App() {
       <Routes>
         <Route path="/" element={<MainPage />} />
         <Route path="/admin" element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["admin"]}>
             <AdminPage />
           </ProtectedRoute>
         } />
         <Route path="/student" element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["student"]}>
             <StudentPage />
           </ProtectedRoute>
         } />
         <Route path="/admin/create-form" element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["admin"]}>
             <CreateFormPage />
           </ProtectedRoute>
         } />
         <Route path="/student/form" element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["student"]}>
             <FormPage />
           </ProtectedRoute>
         } />
-        <Route path="/user/profile/:id" element={<UserProfile />} />
+
+        <Route path="/user/profile/:id" element={
+          <ProtectedRoute allowedRoles={["admin", "student"]}>
+            <UserProfile />
+          </ProtectedRoute>
+        } />
       </Routes>
 
       {/* Login Modal globally */}

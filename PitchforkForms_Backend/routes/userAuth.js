@@ -13,7 +13,7 @@ const router = express.Router();
 router.use(cookieParser());
 
 const activeRefreshTokens = new Set();
-const JWT_SECRET = process.env.SECRET_KEY || "bdhfjsgdfgdfsgdfvbdgf";
+const SECRET_KEY = process.env.SECRET_KEY || "bdhfjsgdfgdfsgdfvbdgf";
 
 //REGISTER USER
 router.post("/register", async (req, res) => {
@@ -65,40 +65,40 @@ router.post("/login", (req, res) => {
             return res.status(401).json({ message: "Hibás email vagy jelszó!" });
         }
 
-        
+
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
-            JWT_SECRET,
+            SECRET_KEY,
             { expiresIn: "1h" }
         );
 
         const refreshToken = jwt.sign(
-            {id:user.id,username:user.username},
+            { id: user.id, username: user.username },
             process.env.REFRESH_SECRET,
-            {expiresIn:"3h"}
+            { expiresIn: "3h" }
         )
 
         activeRefreshTokens.add(refreshToken)
-        res.cookie("refreshToken",refreshToken,{
-            httpOnly:true,
-            secure:true,
-            sameSite:"Strict",
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "Strict",
             maxAge: 3 * 60 * 60 * 1000,
         })
-        res.json({ message: "Sikeres bejelentkezés!", token });
+        res.json({ message: "Sikeres bejelentkezés!", token, id: user.id, username: user.username, email: user.email });
     });
 });
 
 
 //LIST ALL USERS
-router.get("/users",(req,res)=>{
+router.get("/users", (req, res) => {
     const sql_query = "SELECT id, email, username, role, profile_pic FROM users"
-    db.query(sql_query, async(err,results)=>{
-        if(err){
-            console.error("SQL error:",err)
-            res.status(500).json({message:"Szerverhiba!"})
+    db.query(sql_query, async (err, results) => {
+        if (err) {
+            console.error("SQL error:", err)
+            res.status(500).json({ message: "Szerverhiba!" })
         }
-        if(results.length === 0){
+        if (results.length === 0) {
             return res.status(401).json({ message: "Nincs felhasználó a rendszerben!" });
         }
         res.json(results)
@@ -106,57 +106,68 @@ router.get("/users",(req,res)=>{
 })
 
 //PROTECTED ROUTE (ADMIN ONLY)
-router.get("/me", authenticateToken, /*isAdmin,*/ (req,res)=>{
-    res.json({message:"Welcome admin!",user:req.user})
+router.get("/me", authenticateToken, /*isAdmin,*/(req, res) => {
+    res.json({ message: "Welcome admin!", user: req.user })
 })
 
 
 //NEW ACCESS TOKEN
-router.post("/refresh",(req,res)=>{
+router.post("/refresh", (req, res) => {
     const oldRefreshToken = req.cookies.refreshToken
-    if(!oldRefreshToken)
-        return res.status(401).json({error:"No refresh token provided!"})
+    if (!oldRefreshToken)
+        return res.status(401).json({ error: "No refresh token provided!" })
 
 
-    if(!activeRefreshTokens.has(oldRefreshToken))
-        return res.status(403).json({error:"Token has been already used or expired!"})
+    if (!activeRefreshTokens.has(oldRefreshToken))
+        return res.status(403).json({ error: "Token has been already used or expired!" })
 
-    jwt.verify(oldRefreshToken, process.env.REFRESH_SECRET,(err,user)=>{
-        if(err)
-            return res.status(403).json({error:"Invalid or expired refresh token!"})
+    jwt.verify(oldRefreshToken, process.env.REFRESH_SECRET, (err, user) => {
+        if (err)
+            return res.status(403).json({ error: "Invalid or expired refresh token!" })
 
         activeRefreshTokens.delete(oldRefreshToken)
 
         const newAccessToken = jwt.sign(
             { id: user.id, username: user.username },
-            process.env.JWT_SECRET,
+            process.env.SECRET_KEY,
             { expiresIn: "15m" }
         );
         const newRefreshToken = jwt.sign(
             { id: user.id, username: user.username },
             process.env.REFRESH_SECRET,
             { expiresIn: "7d" }
-          );
+        );
 
-          activeRefreshTokens.add(newRefreshToken)
-          res.cookie("refreshToken",newRefreshToken,{
-            httpOnly:true,
-            secure:true,
-            sameSite:"Strict",
+        activeRefreshTokens.add(newRefreshToken)
+        res.cookie("refreshToken", newRefreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "Strict",
             maxAge: 7 * 24 * 60 * 60 * 1000,
-          })
-          res.json({token:newAccessToken})
+        })
+
+        const sql_query = "SELECT email FROM users WHERE id = " + user.id
+        db.query(sql_query, async (err, results) => {
+            if (err) {
+                console.error("SQL error:", err)
+                res.status(500).json({ message: "Szerverhiba!" })
+            }
+            if (results.length === 0) {
+                return res.status(401).json({ message: "Nincs felhasználó a rendszerben!" });
+            }
+            res.json({ token: newAccessToken, id: user.id, username: user.username, email: results[0].email })
+        })
     })
 })
 
 
 //LOGOUT (IF NEEDED)
-router.post("/logout",(req,res)=>{
+router.post("/logout", (req, res) => {
     const refreshToken = req.cookies.refreshToken
-    if(refreshToken) activeRefreshTokens.delete(refreshToken)
+    if (refreshToken) activeRefreshTokens.delete(refreshToken)
 
     res.clearCookie("refreshToken")
-    res.json({message:"Logged out successfully!"})
+    res.json({ message: "Logged out successfully!" })
 })
 
 //UPDATE USER
@@ -186,7 +197,7 @@ router.put("/users/:id", authenticateToken, async (req, res) => {
 });
 
 //DELETE USER
-router.delete("/users/:id",authenticateToken,isAdmin,  async (req, res) => {
+router.delete("/users/:id", authenticateToken, isAdmin, async (req, res) => {
     const userId = req.params.id;
 
     try {

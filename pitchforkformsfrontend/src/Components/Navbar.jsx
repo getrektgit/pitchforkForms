@@ -6,7 +6,7 @@ import LoginModal from './LoginModal';
 import { useNavigate } from 'react-router';
 import axios from 'axios';
 
-export default function AccountMenu({ user, onLogout, onLoginSuccess }) {
+export default function Navbar({ user, onLogout, onLoginSuccess }) {
     const [anchorEl, setAnchorEl] = useState(null);
     const [openLogin, setOpenLogin] = useState(false);
     const [currentUser, setCurrentUser] = useState(user);
@@ -21,7 +21,7 @@ export default function AccountMenu({ user, onLogout, onLoginSuccess }) {
     const handleClose = () => setAnchorEl(null);
 
     const handleLoginSuccess = (userData) => {
-        onLoginSuccess(userData); 
+        onLoginSuccess(userData);
         setCurrentUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
         setOpenLogin(false);
@@ -34,7 +34,7 @@ export default function AccountMenu({ user, onLogout, onLoginSuccess }) {
             console.error("Error during logout:", error);
         }
         handleClose();
-        onLogout(); 
+        onLogout();
         localStorage.removeItem('user');
         localStorage.removeItem('accessToken');
         setCurrentUser(null);
@@ -77,19 +77,19 @@ export default function AccountMenu({ user, onLogout, onLoginSuccess }) {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: '3rem' }}>
                             {currentUser ? (
                                 <>
-                                <Typography
-                                    sx={{ color: 'white', cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
-                                >
-                                    {currentUser.username || currentUser.email}
-                                </Typography>
-                                <Tooltip title="Account settings">
-                                    <IconButton onClick={handleClick} size="small">
-                                        <Avatar sx={{ width: 36, height: 36 }}>
-                                            {(currentUser.username || currentUser.email)?.charAt(0).toUpperCase()}
-                                        </Avatar>
-                                    </IconButton>
-                                </Tooltip>
-                            </>
+                                    <Typography
+                                        sx={{ color: 'white', cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
+                                    >
+                                        {currentUser.username || currentUser.email}
+                                    </Typography>
+                                    <Tooltip title="Account settings">
+                                        <IconButton onClick={handleClick} size="small">
+                                            <Avatar sx={{ width: 36, height: 36 }}>
+                                                {(currentUser.username || currentUser.email)?.charAt(0).toUpperCase()}
+                                            </Avatar>
+                                        </IconButton>
+                                    </Tooltip>
+                                </>
                             ) : (
                                 <Button
                                     onClick={handleOpenLogin}
