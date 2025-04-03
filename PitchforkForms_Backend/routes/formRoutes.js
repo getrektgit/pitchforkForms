@@ -6,7 +6,7 @@ const authenticateToken = require("../middlewares/authMiddleware");
 dotenv.config();
 const router = express.Router();
 
-// Segédfüggvény az SQL lekérdezések egyszerűsítésére
+// Segédfüggvény az SQL lekérdezéshez
 const dbQuery = (sql, params = []) => {
     return new Promise((resolve, reject) => {
         db.query(sql, params, (err, results) => {
@@ -16,7 +16,7 @@ const dbQuery = (sql, params = []) => {
     });
 };
 
-// 1. GET /forms – Csak az alapadatok lekérése
+//GET /forms – Az alapadatok lekérése
 router.get("/forms", authenticateToken, async (req, res) => {
     try {
         const forms = await dbQuery("SELECT id, name, creator_id FROM forms");
@@ -27,7 +27,7 @@ router.get("/forms", authenticateToken, async (req, res) => {
     }
 });
 
-// 2. POST /forms/get – Egy adott űrlap összes adatának optimalizált lekérése
+//POST /forms/get – Egy űrlap összes adatának lekérése
 router.post("/forms/get", authenticateToken, async (req, res) => {
     const { form_id } = req.body;
     
@@ -36,7 +36,7 @@ router.post("/forms/get", authenticateToken, async (req, res) => {
     }
 
     try {
-        // Egyetlen lekérdezéssel lehúzzuk az űrlap adatait, kérdéseket és válaszlehetőségeket
+        // az űrlap adatai
         const query = `
             SELECT 
                 f.id AS form_id, f.name AS form_name, f.creator_id,
