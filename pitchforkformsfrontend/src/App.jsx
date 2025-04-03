@@ -24,7 +24,7 @@ function App() {
       return <Navigate to="/" replace />;
 
     }
-    if (allowedRoles && !allowedRoles.includes(role)) {
+    if (allowedRoles.includes(role)) {
       return children;
     }
     return <Navigate to="/" replace />;

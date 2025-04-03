@@ -1,133 +1,79 @@
-const express = require("express")
-const db = require("../config/database")
-const dotenv = require("dotenv")
-const authenticateToken = require("../middlewares/authMiddleware")
+const express = require("express");
+const db = require("../config/database");
+const dotenv = require("dotenv");
+const authenticateToken = require("../middlewares/authMiddleware");
 
-dotenv.config()
-const router = express.Router()
+dotenv.config();
+const router = express.Router();
 
-//KETTŐ KÜLÖN GETRE SZÉTSZEDNI
-//1.get form alap adatok pl: name meg creator id meg form id meg ilyenek
-//2.get /forms/get post-al hívom meg hogy paramétert lehessen neki adni annak adok egy id-t és annak a formnak az id alapján lekéri az összes adatát
-router.get("/forms", authenticateToken, (req, res) => {
-    db.query("SELECT * FROM forms", (err, forms) => {
-        if (err) {
-            console.error("SQL Error:", err);
-            return res.status(500).json({ message: "Szerverhiba!" });
-        }
-
-        const formsWithQuestions = [];
-        let formsRemaining = forms.length;
-
-        forms.forEach(form => {
-            db.query("SELECT * FROM questions WHERE form_id = ?", [form.id], (err, questions) => {
-                if (err) {
-                    console.error("SQL Error:", err);
-                    return res.status(500).json({ message: "Szerverhiba!" });
-                }
-
-                const questionsWithAnswers = [];
-                let questionsRemaining = questions.length;
-
-                questions.forEach(question => {
-                    db.query("SELECT * FROM answer_options WHERE question_id = ?", [question.id], (err, answers) => {
-                        if (err) {
-                            console.error("SQL Error:", err);
-                            return res.status(500).json({ message: "Szerverhiba!" });
-                        }
-
-                        questionsWithAnswers.push({
-                            ...question,
-                            answers: answers
-                        });
-
-                        questionsRemaining--;
-                        if (questionsRemaining === 0) {
-                            formsWithQuestions.push({
-                                ...form,
-                                questions: questionsWithAnswers
-                            });
-
-                            formsRemaining--;
-                            if (formsRemaining === 0) {
-                                res.json(formsWithQuestions);
-                            }
-                        }
-                    });
-                });
-            });
+// Segédfüggvény az SQL lekérdezések egyszerűsítésére
+const dbQuery = (sql, params = []) => {
+    return new Promise((resolve, reject) => {
+        db.query(sql, params, (err, results) => {
+            if (err) reject(err);
+            else resolve(results);
         });
     });
+};
+
+// 1. GET /forms – Csak az alapadatok lekérése
+router.get("/forms", authenticateToken, async (req, res) => {
+    try {
+        const forms = await dbQuery("SELECT id, name, creator_id FROM forms");
+        res.json(forms);
+    } catch (error) {
+        console.error("SQL Error:", error);
+        res.status(500).json({ message: "Szerverhiba!" });
+    }
 });
 
-router.post("/save-form", authenticateToken, (req, res) => {
-    const { name, creator_id, questions } = req.body;
-
-    if (!name || !creator_id || !questions || !Array.isArray(questions)) {
-        return res.status(400).json({ message: "Hiányzó adatok vagy hibás formátum!" });
+// 2. POST /forms/get – Egy adott űrlap összes adatának optimalizált lekérése
+router.post("/forms/get", authenticateToken, async (req, res) => {
+    const { form_id } = req.body;
+    
+    if (!form_id) {
+        return res.status(400).json({ message: "Hiányzó form_id!" });
     }
 
-    db.beginTransaction(err => {
-        if (err) {
-            console.error("Transaction Error:", err);
-            return res.status(500).json({ message: "Szerverhiba!" });
+    try {
+        // Egyetlen lekérdezéssel lehúzzuk az űrlap adatait, kérdéseket és válaszlehetőségeket
+        const query = `
+            SELECT 
+                f.id AS form_id, f.name AS form_name, f.creator_id,
+                q.id AS question_id, q.text AS question_text, q.type, q.score,
+                GROUP_CONCAT(JSON_OBJECT('id', a.id, 'text', a.text, 'is_right', a.is_right)) AS answers
+            FROM forms f
+            LEFT JOIN questions q ON f.id = q.form_id
+            LEFT JOIN answer_options a ON q.id = a.question_id
+            WHERE f.id = ?
+            GROUP BY q.id
+        `;
+
+        const results = await dbQuery(query, [form_id]);
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: "Nincs ilyen űrlap!" });
         }
 
-        db.query("INSERT INTO forms (name, creator_id) VALUES (?, ?)", [name, creator_id], (err, formResult) => {
-            if (err) {
-                return db.rollback(() => {
-                    console.error("SQL Error:", err);
-                    res.status(500).json({ message: "Szerverhiba!", error: err.message });
-                });
-            }
-            const formId = formResult.insertId;
+        // Az űrlap alapadatai
+        const form = {
+            id: results[0].form_id,
+            name: results[0].form_name,
+            creator_id: results[0].creator_id,
+            questions: results.map(row => ({
+                id: row.question_id,
+                text: row.question_text,
+                type: row.type,
+                score: row.score,
+                answers: row.answers ? JSON.parse(`[${row.answers}]`) : []
+            }))
+        };
 
-            let queriesRemaining = questions.length;
-            questions.forEach(question => {
-                const { text, type, score, answers } = question;
-
-                db.query("INSERT INTO questions (text, type, form_id, score) VALUES (?, ?, ?, ?)",
-                    [text, type, formId, score], (err, questionResult) => {
-                        if (err) {
-                            return db.rollback(() => {
-                                console.error("SQL Error:", err);
-                                res.status(500).json({ message: "Szerverhiba!", error: err.message });
-                            });
-                        }
-                        const questionId = questionResult.insertId;
-
-                        let answerQueriesRemaining = answers.length;
-                        answers.forEach(answer => {
-                            const { text, is_right } = answer;
-                            db.query("INSERT INTO answer_options (question_id, text, is_right) VALUES (?, ?, ?)",
-                                [questionId, text, is_right], (err) => {
-                                    if (err) {
-                                        return db.rollback(() => {
-                                            console.error("SQL Error:", err);
-                                            res.status(500).json({ message: "Szerverhiba!", error: err.message });
-                                        });
-                                    }
-                                    answerQueriesRemaining--;
-                                    if (answerQueriesRemaining === 0) {
-                                        queriesRemaining--;
-                                        if (queriesRemaining === 0) {
-                                            db.commit(err => {
-                                                if (err) {
-                                                    return db.rollback(() => {
-                                                        console.error("Transaction Commit Error:", err);
-                                                        res.status(500).json({ message: "Szerverhiba!" });
-                                                    });
-                                                }
-                                                res.status(201).json({ message: "Form sikeresen létrehozva!", formId });
-                                            });
-                                        }
-                                    }
-                                });
-                        });
-                    });
-            });
-        });
-    });
+        res.json(form);
+    } catch (error) {
+        console.error("SQL Error:", error);
+        res.status(500).json({ message: "Szerverhiba!" });
+    }
 });
 
-module.exports = router
+module.exports = router;
