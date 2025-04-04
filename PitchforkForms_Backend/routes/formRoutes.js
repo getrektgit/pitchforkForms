@@ -76,7 +76,7 @@ router.post("/forms/get", authenticateToken, async (req, res) => {
     }
 });
 
-router.post("/forms", authenticateToken, async (req, res) => {
+router.post("/save-forms", authenticateToken, async (req, res) => {
     const { name, creator_id, questions } = req.body;
 
     if (!name || !creator_id || !Array.isArray(questions)) {
