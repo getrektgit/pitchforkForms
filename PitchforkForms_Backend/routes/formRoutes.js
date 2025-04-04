@@ -76,4 +76,57 @@ router.post("/forms/get", authenticateToken, async (req, res) => {
     }
 });
 
+router.post("/forms", authenticateToken, async (req, res) => {
+    const { name, creator_id, questions } = req.body;
+
+    if (!name || !creator_id || !Array.isArray(questions)) {
+        return res.status(400).json({ message: "Hiányzó vagy hibás adatok!" });
+    }
+
+    db.beginTransaction(async (err) => {
+        if (err) {
+            console.error("Tranzakciós hiba:", err);
+            return res.status(500).json({ message: "Szerverhiba!" });
+        }
+
+        try {
+            const formResult = await dbQuery("INSERT INTO forms (name, creator_id) VALUES (?, ?)", [name, creator_id]);
+            const formId = formResult.insertId;
+
+            for (const question of questions) {
+                const { text, type, score, answers } = question;
+
+                const questionResult = await dbQuery(
+                    "INSERT INTO questions (text, type, form_id, score) VALUES (?, ?, ?, ?)",
+                    [text, type, formId, score]
+                );
+                const questionId = questionResult.insertId;
+
+                for (const answer of answers) {
+                    const { text, is_right } = answer;
+                    await dbQuery(
+                        "INSERT INTO answer_options (question_id, text, is_right) VALUES (?, ?, ?)",
+                        [questionId, text, is_right]
+                    );
+                }
+            }
+
+            db.commit((err) => {
+                if (err) {
+                    return db.rollback(() => {
+                        console.error("Commit hiba:", err);
+                        res.status(500).json({ message: "Szerverhiba!" });
+                    });
+                }
+                res.status(201).json({ message: "Űrlap sikeresen létrehozva!", formId });
+            });
+        } catch (error) {
+            db.rollback(() => {
+                console.error("SQL Hiba:", error);
+                res.status(500).json({ message: "Szerverhiba!", error: error.message });
+            });
+        }
+    });
+});
+
 module.exports = router;
