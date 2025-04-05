@@ -16,8 +16,8 @@ const dbQuery = (sql, params = []) => {
     });
 };
 
-//GET /forms – Az alapadatok lekérése
-router.get("/forms", authenticateToken, async (req, res) => {
+//GET /get-basic-info – Az alapadatok lekérése
+router.get("/get-basic-info", authenticateToken, async (req, res) => {
     try {
         const forms = await dbQuery("SELECT id, name, creator_id FROM forms");
         res.json(forms);
@@ -27,8 +27,8 @@ router.get("/forms", authenticateToken, async (req, res) => {
     }
 });
 
-//POST /forms/get – Egy űrlap összes adatának lekérése
-router.post("/forms/get", authenticateToken, async (req, res) => {
+//POST /get-all – Egy űrlap összes adatának lekérése
+router.post("/get-all", authenticateToken, async (req, res) => {
     const { form_id } = req.body;
     
     if (!form_id) {
