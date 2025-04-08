@@ -30,7 +30,7 @@ router.get("/get-basic-info", authenticateToken, async (req, res) => {
 //POST /get-all – Egy űrlap összes adatának lekérése
 router.post("/get-all", authenticateToken, async (req, res) => {
     const { form_id } = req.body;
-    
+
     if (!form_id) {
         return res.status(400).json({ message: "Hiányzó form_id!" });
     }
@@ -77,9 +77,9 @@ router.post("/get-all", authenticateToken, async (req, res) => {
 });
 
 router.post("/save-forms", authenticateToken, async (req, res) => {
-    const { name, creator_id, questions } = req.body;
+    const { name, questions } = req.body;
 
-    if (!name || !creator_id || !Array.isArray(questions)) {
+    if (!name || !req.user.id || !Array.isArray(questions)) {
         return res.status(400).json({ message: "Hiányzó vagy hibás adatok!" });
     }
 
@@ -90,7 +90,7 @@ router.post("/save-forms", authenticateToken, async (req, res) => {
         }
 
         try {
-            const formResult = await dbQuery("INSERT INTO forms (name, creator_id) VALUES (?, ?)", [name, creator_id]);
+            const formResult = await dbQuery("INSERT INTO forms (name, creator_id) VALUES (?, ?)", [name, req.user.id]);
             const formId = formResult.insertId;
 
             for (const question of questions) {

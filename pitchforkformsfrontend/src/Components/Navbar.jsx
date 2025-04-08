@@ -3,16 +3,24 @@ import { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Box, Avatar, Menu, MenuItem, ListItemIcon, Divider, IconButton, Typography, Tooltip, Button } from '@mui/material';
 import Logout from '@mui/icons-material/Logout';
 import LoginModal from './LoginModal';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import axios from 'axios';
 
 export default function Navbar({ user, onLogout, onLoginSuccess }) {
+    const rolesEnum = { ADMIN: "admin", STUDENT: "student", NOUSER: "noUser" }
+
+    if (!user) {
+        user = { role: rolesEnum.NOUSER }
+    }
     const [anchorEl, setAnchorEl] = useState(null);
     const [openLogin, setOpenLogin] = useState(false);
     const [currentUser, setCurrentUser] = useState(user);
-
+    const links = [
+        { role: rolesEnum.STUDENT, label: "student label", route: "/" },
+        { role: rolesEnum.NOUSER, label: "no user label", route: "/" },
+        { role: rolesEnum.ADMIN, label: "admin label", route: "/" }
+    ]
     const navigate = useNavigate();
-
     const handleOpenLogin = () => setOpenLogin(true);
     const handleCloseLogin = () => setOpenLogin(false);
 
@@ -61,19 +69,13 @@ export default function Navbar({ user, onLogout, onLoginSuccess }) {
             >
                 <Toolbar sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', px: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
-                        <Typography
-                            variant="h6"
-                            sx={{ cursor: 'pointer', color: 'white', '&:hover': { opacity: 0.8 } }}
-                        >
-                            About
-                        </Typography>
-                        <Typography
-                            variant="h6"
-                            sx={{ cursor: 'pointer', color: 'white', '&:hover': { opacity: 0.8 } }}
-                        >
-                            Contact Us
-                        </Typography>
-
+                        {
+                            links.filter(link => link.role === user.role).map((link) => (
+                                <Link to={link.route}>
+                                    <Button>{link.label}</Button>
+                                </Link>
+                            ))
+                        }
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: '3rem' }}>
                             {currentUser ? (
                                 <>
