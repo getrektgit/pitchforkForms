@@ -14,11 +14,13 @@ export default function Navbar({ user, onLogout, onLoginSuccess }) {
     }
     const [anchorEl, setAnchorEl] = useState(null);
     const [openLogin, setOpenLogin] = useState(false);
-    const [currentUser, setCurrentUser] = useState(user);
+    const [currentUser, setCurrentUser] = useState(null);
     const links = [
-        { role: rolesEnum.STUDENT, label: "student label", route: "/" },
+        { role: rolesEnum.STUDENT, label: "Student page", route: "/student" },
         { role: rolesEnum.NOUSER, label: "no user label", route: "/" },
-        { role: rolesEnum.ADMIN, label: "admin label", route: "/" }
+        { role: rolesEnum.ADMIN, label: "Create Form", route: "/admin/create-form" },
+        { role: rolesEnum.STUDENT, label: "Student forms", route: "student/form" },
+        { role: rolesEnum.ADMIN, label: "Forms", route: "/admin" },
     ]
     const navigate = useNavigate();
     const handleOpenLogin = () => setOpenLogin(true);
@@ -72,7 +74,7 @@ export default function Navbar({ user, onLogout, onLoginSuccess }) {
                         {
                             links.filter(link => link.role === user.role).map((link) => (
                                 <Link to={link.route}>
-                                    <Button>{link.label}</Button>
+                                    <Button sx={{color:'white'}}>{link.label}</Button>
                                 </Link>
                             ))
                         }

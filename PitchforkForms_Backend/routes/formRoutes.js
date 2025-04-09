@@ -18,8 +18,12 @@ const dbQuery = (sql, params = []) => {
 
 //GET /get-basic-info – Az alapadatok lekérése
 router.get("/get-basic-info", authenticateToken, async (req, res) => {
+    const { userId } = req.query;
+    if (!userId) {
+        return res.status(400).json({ message: "Nincs megadva felhasználói ID." });
+    }
     try {
-        const forms = await dbQuery("SELECT id, name, creator_id FROM forms");
+        const forms = await dbQuery("SELECT id, name, creator_id FROM forms WHERE creator_id = ?",[userId]);
         res.json(forms);
     } catch (error) {
         console.error("SQL Error:", error);
