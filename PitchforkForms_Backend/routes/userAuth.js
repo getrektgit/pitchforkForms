@@ -5,7 +5,7 @@ const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const db = require("../config/database");
 const authenticateToken = require("../middlewares/authMiddleware")
-const isAdmin = require("../middlewares/roleCheckMiddleware")
+const dbQuery = require("../utils/queryHelper")
 
 dotenv.config()
 
@@ -13,7 +13,7 @@ const router = express.Router();
 router.use(cookieParser());
 
 const activeRefreshTokens = new Set();
-const SECRET_KEY = process.env.SECRET_KEY || "bdhfjsgdfgdfsgdfvbdgf";
+const SECRET_KEY = process.env.SECRET_KEY;
 
 //REGISTER USER
 router.post("/register", async (req, res) => {
@@ -28,14 +28,13 @@ router.post("/register", async (req, res) => {
         const role = "student"
         const sql = "INSERT INTO users (email, username, role, password_hash, profile_pic) VALUES (?, ?, ?, ?, ?)";
 
-        db.query(sql, [email, username, role, passwordHash, profile_pic], (err, result) => {
-            if (err) {
-                console.error("SQL Error:", err);
-                return res.status(500).json({ message: "Szerverhiba!", error: err.sqlMessage });
-            }
-            res.status(201).json({ message: "Sikeres regisztráció!" });
-        });
-
+        const response = dbQuery(sql, [email, username, role, passwordHash, profile_pic])
+        if(response.length === 0){
+            res.status(404).json({message:"Hibas keres"})
+        }
+        else{
+            res.status(201).json({message:"Sikeres regisztracio!"})
+        }
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Hiba történt a regisztráció során!" });
@@ -90,34 +89,15 @@ router.post("/login", (req, res) => {
 });
 
 
-//LIST ALL USERS
-router.get("/users", (req, res) => {
-    const sql_query = "SELECT id, email, username, role, profile_pic FROM users"
-    db.query(sql_query, async (err, results) => {
-        if (err) {
-            console.error("SQL error:", err)
-            res.status(500).json({ message: "Szerverhiba!" })
-        }
-        if (results.length === 0) {
-            return res.status(401).json({ message: "Nincs felhasználó a rendszerben!" });
-        }
-        res.json(results)
-    })
-})
-
 //PROTECTED ROUTE (ADMIN ONLY)
 router.get("/me", authenticateToken, /*isAdmin,*/(req, res) => {
     const sql_query = "SELECT role FROM users WHERE id = " + req.user.id
-    db.query(sql_query, async (err, results) => {
-        if (err) {
-            console.error("SQL error:", err)
-            res.status(500).json({ message: "Szerverhiba!" })
-        }
-        if (results.length === 0) {
-            return res.status(401).json({ message: "Nincs felhasználó a rendszerben!" });
-        }
-        res.json({ message: "Welcome admin!", user: req.user, role: results[0].role })
-    })
+    const results = dbQuery(sql_query)
+    
+    if (results.length === 0) {
+        return res.status(401).json({ message: "Nincs felhasználó a rendszerben!" });
+    }
+    res.json({ message: "Welcome admin!", user: req.user, role: results[0].role })
 })
 
 
@@ -181,49 +161,6 @@ router.post("/logout", (req, res) => {
     res.json({ message: "Logged out successfully!" })
 })
 
-//UPDATE USER
-router.put("/users/:id", authenticateToken, async (req, res) => {
-    const userId = req.params.id;
-    const { email, username, profile_pic } = req.body;
 
-    if (!email || !username) {
-        return res.status(400).json({ message: "Email és felhasználónév megadása kötelező!" });
-    }
-
-    try {
-        const sql = "UPDATE users SET email = ?, username = ?, profile_pic = ? WHERE id = ?";
-        const values = [email, username, profile_pic || null, userId];
-
-        const result = await db.execute(sql, values);
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: "Felhasználó nem található!" });
-        }
-
-        res.json({ message: "Felhasználói adatok sikeresen frissítve!" });
-    } catch (error) {
-        console.error("SQL Error:", error);
-        res.status(500).json({ message: "Szerverhiba!", error: error.sqlMessage });
-    }
-});
-
-//DELETE USER
-router.delete("/users/:id", authenticateToken, isAdmin, async (req, res) => {
-    const userId = req.params.id;
-
-    try {
-        const sql = "DELETE FROM users WHERE id = ?";
-        const result = await db.execute(sql, [userId]);
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: "Felhasználó nem található!" });
-        }
-
-        res.json({ message: "Felhasználó sikeresen törölve!" });
-    } catch (error) {
-        console.error("SQL Error:", error);
-        res.status(500).json({ message: "Szerverhiba!", error: error.sqlMessage });
-    }
-});
 
 module.exports = router;

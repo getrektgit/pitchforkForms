@@ -1,13 +1,20 @@
 const express = require('express');
-const db = require("./config/database")
 const cors = require("cors");
 const dotenv = require("dotenv")
 const userAuth = require("./routes/userAuth")
 const cookieParser  = require("cookie-parser")
 const formRoutes = require("./routes/formRoutes")
+const userActions = require("./routes/userActions")
+//const bcrypt = require("bcryptjs");
+//const dbQuery = require("./utils/queryHelper");
 
 dotenv.config()
 const app = express()
+
+//const adminEmail = "pitchforkforms@gmail.com";
+//const adminUsername = "Admin";
+//const adminPassword = "pforms123";
+//const adminRole = "admin";
 
 app.use(cors({
     origin:'http://localhost:5173',
@@ -24,7 +31,7 @@ app.use(cookieParser())
 
 app.use('/auth',userAuth)
 app.use('/form',formRoutes)
+app.use('/user',userActions)
 
-
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -2,19 +2,12 @@ const express = require("express");
 const db = require("../config/database");
 const dotenv = require("dotenv");
 const authenticateToken = require("../middlewares/authMiddleware");
+const dbQuery = require("../utils/queryHelper")
 
 dotenv.config();
 const router = express.Router();
 
-// Segédfüggvény az SQL lekérdezéshez
-const dbQuery = (sql, params = []) => {
-    return new Promise((resolve, reject) => {
-        db.query(sql, params, (err, results) => {
-            if (err) reject(err);
-            else resolve(results);
-        });
-    });
-};
+
 
 //GET /forms – Az alapadatok lekérése
 router.get("/forms", authenticateToken, async (req, res) => {
@@ -129,4 +122,97 @@ router.post("/save-forms", authenticateToken, async (req, res) => {
     });
 });
 
+router.post("/forms/evaluate", authenticateToken, async (req, res) => {
+    const { form_id, submission_id } = req.body;
+
+    if (!form_id || !submission_id) {
+        return res.status(400).json({ message: "Hiányzó adatok!" });
+    }
+
+    try {
+        let totalScore = 0;
+        let userScore = 0;
+
+        const questions = await dbQuery("SELECT id, score FROM questions WHERE form_id = ?", [form_id]);
+
+        for (const question of questions) {
+            const { id: questionId, score } = question;
+            totalScore += score;
+
+            const correctAnswers = await dbQuery(
+                "SELECT id FROM answer_options WHERE question_id = ? AND is_right = 1",
+                [questionId]
+            );
+            const correctIds = correctAnswers.map(ans => Number(ans.id)).sort((a, b) => a - b);
+
+            const userAnswers = await dbQuery(
+                `SELECT sa.answer_id
+                 FROM submission_answers sa
+                 JOIN answer_options ao ON sa.answer_id = ao.id
+                 WHERE sa.submission_id = ? AND ao.question_id = ?`,
+                [submission_id, questionId]
+            );
+            const userAnswerIds = userAnswers.map(a => Number(a.answer_id)).sort((a, b) => a - b);
+            console.log("Kérdés ID:", questionId);
+            console.log("Helyes válaszok:", correctIds);
+            console.log("Beküldött válaszok:", userAnswerIds);
+            const isCorrect = JSON.stringify(correctIds) === JSON.stringify(userAnswerIds);
+            if (isCorrect) {
+                userScore += score;
+            }
+        }
+
+        res.json({ message: "Értékelés kész!", score: userScore, maxScore: totalScore });
+    } catch (error) {
+        console.error("Értékelési hiba:", error);
+        res.status(500).json({ message: "Hiba az értékelés során!", error: error.message });
+    }
+});
+
+router.post("/forms/save-answers", authenticateToken, async (req, res) => {
+    const { form_id, user_id, answers } = req.body;
+
+    if (!form_id || !user_id || !Array.isArray(answers)) {
+        return res.status(400).json({ message: "Hiányzó vagy hibás adatok!" });
+    }
+
+    db.beginTransaction(async (err) => {
+        if (err) {
+            console.error("Tranzakciós hiba:", err);
+            return res.status(500).json({ message: "Szerverhiba!" });
+        }
+
+        try {
+            const submissionResult = await dbQuery(
+                "INSERT INTO submissions (user_id, form_id, submit_time) VALUES (?, ?, NOW())",
+                [user_id, form_id]
+            );
+            const submissionId = submissionResult.insertId;
+
+            for (const answer of answers) {
+                await dbQuery(
+                    "INSERT INTO submission_answers (submission_id, answer_id) VALUES (?, ?)",
+                    [submissionId, answer.answer_id]
+                );
+            }
+
+            db.commit((err) => {
+                if (err) {
+                    return db.rollback(() => {
+                        console.error("Commit hiba:", err);
+                        res.status(500).json({ message: "Szerverhiba a mentés során!" });
+                    });
+                }
+
+                res.status(201).json({ message: "Válaszok sikeresen elmentve!", submissionId });
+            });
+
+        } catch (error) {
+            db.rollback(() => {
+                console.error("Mentési hiba:", error);
+                res.status(500).json({ message: "Hiba a válaszok mentése során!", error: error.message });
+            });
+        }
+    });
+});
 module.exports = router;
