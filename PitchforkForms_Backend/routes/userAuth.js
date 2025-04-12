@@ -84,7 +84,7 @@ router.post("/login", (req, res) => {
             sameSite: "Strict",
             maxAge: 3 * 60 * 60 * 1000,
         })
-        res.json({ message: "Sikeres bejelentkezés!", token, id: user.id, username: user.username, email: user.email });
+        res.json({ message: "Sikeres bejelentkezés!", token, id: user.id, username: user.username, email: user.email, role: user.role });
     });
 });
 
@@ -146,7 +146,7 @@ router.post("/refresh", (req, res) => {
                 return res.status(401).json({ message: "Nincs felhasználó a rendszerben!" });
             }
 
-            res.json({ token: newAccessToken, id: user.id, username: user.username, email: results[0].email})
+            res.json({ token: newAccessToken, id: user.id, username: user.username, email: results[0].email })
         })
     })
 })

@@ -68,16 +68,27 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
           role: response.data.role, // Ensure role is included
         });
       }
-
-      navigate("/"); // Redirect after successful login
+      if (response.data.role === "admin") {
+        navigate("/admin")
+      }
+      else if (response.data.role === "student") {
+        navigate("/student")
+      }
+      else {
+        navigate("/");
+      }
+      
       handleClose(); // Close modal
     } catch (error) {
       if (error.response) {
         setError(error.response.data.message || "Invalid credentials provided");
+        alert('Invalid credentials provided');
       } else if (error.request) {
         setError("No response from server. Please try again later.");
+        alert('No response from server. Please try again later.');
       } else {
         setError("An error occurred. Please try again later.");
+        alert('An error occurred. Please try again later.');
       }
     } finally {
       setLoading(false);
