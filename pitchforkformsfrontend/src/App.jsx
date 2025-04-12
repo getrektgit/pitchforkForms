@@ -10,6 +10,7 @@ import LoginModal from './Components/LoginModal';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import UserProfile from './Components/Pages/UserProfile';
+import EditFormPage from './Components/Pages/EditFormPage';
 
 function App() {
   const [openLogin, setOpenLogin] = useState(false);
@@ -45,9 +46,9 @@ function App() {
           localStorage.setItem('accessToken', accessToken);
           localStorage.setItem('rememberMe', "true");
           setUser({
-            id: response.data.id,
-            username: response.data.username,
-            email: response.data.email,
+            id: response.data.user.id,
+            username: response.data.user.username,
+            email: response.data.user.email,
             role: response.data.role,
           });
 
@@ -152,6 +153,12 @@ function App() {
         <Route path="/user/profile/:id" element={
           <ProtectedRoute allowedRoles={["admin", "student"]}>
             <UserProfile />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin/edit-form/:id" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <EditFormPage />
           </ProtectedRoute>
         } />
       </Routes>

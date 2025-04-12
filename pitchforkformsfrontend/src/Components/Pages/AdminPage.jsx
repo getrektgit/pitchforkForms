@@ -36,7 +36,7 @@ const AdminPage = () => {
       <Grid container spacing={3}>
         {forms.map((form) => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={form.id}>
-            <FormCard formName={form.name} />
+            <FormCard formName={form.name} formId={form.id} />
           </Grid>
         ))}
       </Grid>

@@ -5,8 +5,9 @@ import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-
-export default function FormCard({ formName }) {
+import { useNavigate } from 'react-router';
+export default function FormCard({ formName, formId }) {
+    const navigate = useNavigate();
     return (
         <Card
             sx={{
@@ -44,7 +45,7 @@ export default function FormCard({ formName }) {
                 paddingLeft:4,
                 paddingRight:4,
             }}>
-                <Button variant="outlined" size="small">Edit</Button>
+                <Button variant="outlined" size="small" onClick={()=>navigate(`/admin/edit-form/${formId}`)}>Edit</Button>
                 <Button variant="contained" size="small">Send</Button>
             </CardActions>
         </Card>
