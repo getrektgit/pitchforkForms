@@ -11,6 +11,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import UserProfile from './Components/Pages/UserProfile';
 import EditFormPage from './Components/Pages/EditFormPage';
+import AllStudentsPage from './Components/Pages/AllStudentsPage';
+import AboutUsPage from './Components/Pages/AboutUsPage';
 
 function App() {
   const [openLogin, setOpenLogin] = useState(false);
@@ -129,6 +131,7 @@ function App() {
       />
       <Routes>
         <Route path="/" element={<MainPage />} />
+        <Route path="/about-us" element={<AboutUsPage />} />
         <Route path="/admin" element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminPage />
@@ -159,6 +162,11 @@ function App() {
         <Route path="/admin/edit-form/:id" element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <EditFormPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/all-students" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AllStudentsPage />
           </ProtectedRoute>
         } />
       </Routes>

@@ -7,7 +7,7 @@ import { Link, useNavigate } from 'react-router';
 import axios from 'axios';
 
 export default function Navbar({ user, onLogout, onLoginSuccess }) {
-    const rolesEnum = { ADMIN: "admin", STUDENT: "student", NOUSER: "noUser" }
+    const rolesEnum = { ADMIN: "admin", STUDENT: "student", NOUSER: "noUser", EVERYONE: "everyone" };
 
     if (!user) {
         user = { role: rolesEnum.NOUSER }
@@ -16,11 +16,13 @@ export default function Navbar({ user, onLogout, onLoginSuccess }) {
     const [openLogin, setOpenLogin] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     const links = [
+        { role: rolesEnum.EVERYONE, label: "Home", route: "/" },
+        { role: rolesEnum.EVERYONE, label: "About us", route: "/about-us" },
         { role: rolesEnum.STUDENT, label: "Student page", route: "/student" },
-        { role: rolesEnum.NOUSER, label: "no user label", route: "/" },
         { role: rolesEnum.ADMIN, label: "Create Form", route: "/admin/create-form" },
         { role: rolesEnum.STUDENT, label: "Student forms", route: "student/form" },
         { role: rolesEnum.ADMIN, label: "Forms", route: "/admin" },
+        { role: rolesEnum.ADMIN, label: "Studens", route: "/admin/all-students" },
     ]
     const navigate = useNavigate();
     const handleOpenLogin = () => setOpenLogin(true);
@@ -72,9 +74,9 @@ export default function Navbar({ user, onLogout, onLoginSuccess }) {
                 <Toolbar sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', px: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
                         {
-                            links.filter(link => link.role === user.role).map((link) => (
+                            links.filter(link => link.role === user.role || link.role === "everyone").map((link) => (
                                 <Link to={link.route}>
-                                    <Button sx={{color:'white'}}>{link.label}</Button>
+                                    <Button sx={{ color: 'white' }}>{link.label}</Button>
                                 </Link>
                             ))
                         }
