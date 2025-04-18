@@ -33,59 +33,171 @@ const MainPage = () => {
   const pieColors = ['#4caf50', '#f44336', '#ff9800'];
 
   return (
-    <Box sx={{ textAlign: "center", padding: 3 }}>
-      {/* Header */}
-      <Typography variant="h3" fontWeight="bold" gutterBottom>
-        Pitchfork Forms
-      </Typography>
-      <Typography variant="h6" color="white" sx={{ maxWidth: 600, margin: "auto", mb: 3 }}>
-        Get started with Pitchfork Forms to create, share, and evaluate interactive forms with ease.
-        Save time with automated grading, track progress effortlessly, and simplify learning like never before.
-      </Typography>
+    <Box
+  sx={{
+    textAlign: "center",
+    py: 8,
+    px: 2,
+    backgroundColor: "#9FB3DF", // világosított tengerkék árnyalat
+    borderRadius: 4,
+    boxShadow: 3,
+  }}
+>
+  <Typography
+    variant="h2"
+    sx={{
+      fontWeight: 800,
+      mb: 2,
+      color: "#0B1D33", // mélykék szöveg kontraszt
+    }}
+  >
+    Pitchfork Forms
+  </Typography>
 
-      {/* Carousel */}
-      <Carousel />
+  <Typography
+    variant="h6"
+    sx={{
+      maxWidth: 700,
+      mx: "auto",
+      mb: 5,
+      color: "#1d2e44", // szürkéskék árnyalat
+      fontSize: "1.15rem",
+    }}
+  >
+    Create, share and evaluate forms with ease. Automate grading, track performance,
+    and simplify your workflow in minutes.
+  </Typography>
 
-      {/* Get Started Button */}
-      <Box sx={{ mt: 3 }}>
-        <Button variant="contained" size="large" onClick={handleOpenRegister}>
-          Get Started
-        </Button>
-      </Box>
+  <Carousel />
+
+  <Box sx={{ mt: 5 }}>
+    <Button
+      variant="contained"
+      size="large"
+      onClick={handleOpenRegister}
+      sx={{
+        backgroundColor: "#102E50",
+        px: 4,
+        py: 1.5,
+        borderRadius: "30px",
+        fontWeight: "bold",
+        fontSize: "1rem",
+        boxShadow: "0 4px 14px rgba(16, 46, 80, 0.4)",
+        '&:hover': {
+          backgroundColor: "#0c2342",
+        }
+      }}
+    >
+      Get Started
+    </Button>
+  </Box>
+
+
+
+
 
       {/* General Features Section */}
-      <Box sx={{ mt: 6 }}>
-        <Typography variant="h4" gutterBottom>What You Can Expect</Typography>
-        <Grid container spacing={3} justifyContent="center">
-          {["Easy to Use", "Flexible Templates", "Instant Insights"].map((feature, index) => (
-            <Grid item xs={12} sm={4} key={index}>
-              <Paper elevation={3} sx={{ p: 3, minHeight: 120 }}>
-                <Typography variant="h6" fontWeight="bold">{feature}</Typography>
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor.
-                </Typography>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
+<Box sx={{ mt: 10, textAlign: 'center' }}>
+  <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
+    What You Can Expect
+  </Typography>
+  <Typography variant="subtitle1" sx={{ mb: 4 }}>
+    Discover the benefits designed to help you succeed.
+  </Typography>
+  <Grid container spacing={4} justifyContent="center">
+    {[
+      {
+        title: "Easy to Use",
+        desc: "Intuitive interface designed for everyone — no tech skills required."
+      },
+      {
+        title: "Flexible Templates",
+        desc: "Pre-built forms and layouts you can customize in seconds."
+      },
+      {
+        title: "Instant Insights",
+        desc: "Real-time analytics help you make better decisions, faster."
+      }
+    ].map((feature, index) => (
+      <Grid item xs={12} sm={6} md={4} key={index}>
+        <Paper
+          elevation={4}
+          sx={{
+            p: 4,
+            borderRadius: 4,
+            textAlign: 'left',
+            transition: 'transform 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-5px)',
+              boxShadow: 6
+            },
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+            {feature.title}
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            {feature.desc}
+          </Typography>
+        </Paper>
+      </Grid>
+    ))}
+  </Grid>
+</Box>
 
-      {/* Simple Steps Section */}
-      <Box sx={{ mt: 8 }}>
-        <Typography variant="h4" gutterBottom>Just 3 Simple Steps</Typography>
-        <Grid container spacing={2} justifyContent="center">
-          {["Sign up", "Create a Form", "Share & Analyze"].map((step, index) => (
-            <Grid item key={index}>
-              <Paper elevation={2} sx={{ p: 2, width: 200 }}>
-                <Typography variant="h5" color="primary" fontWeight="bold">
-                  {index + 1}
-                </Typography>
-                <Typography variant="subtitle1">{step}</Typography>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
+{/* Simple Steps Section */}
+<Box sx={{ mt: 12, textAlign: 'center' }}>
+  <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
+    Just 3 Simple Steps
+  </Typography>
+  <Typography variant="subtitle1" sx={{ mb: 4 }}>
+    Get started in minutes with these easy steps.
+  </Typography>
+  <Grid container spacing={4} justifyContent="center">
+    {["Sign Up", "Create a Form", "Share & Analyze"].map((step, index) => (
+      <Grid item xs={12} sm={6} md={4} key={index}>
+        <Paper
+          elevation={3}
+          sx={{
+            p: 4,
+            borderRadius: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              backgroundColor: 'primary.light',
+              color: 'white',
+              transform: 'translateY(-4px)'
+            }
+          }}
+        >
+          <Box
+            sx={{
+              width: 50,
+              height: 50,
+              borderRadius: '50%',
+              backgroundColor: 'primary.main',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 'bold',
+              fontSize: '1.25rem',
+              mb: 2
+            }}
+          >
+            {index + 1}
+          </Box>
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+            {step}
+          </Typography>
+        </Paper>
+      </Grid>
+    ))}
+  </Grid>
+</Box>
+
 
       {/* Graph Section */}
       <Box sx={{ mt: 10 }}>

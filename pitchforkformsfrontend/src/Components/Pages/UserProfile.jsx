@@ -1,10 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import axios from 'axios';
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  Avatar,
+  CircularProgress,
+  Stack,
+} from '@mui/material';
 
 const UserProfile = () => {
   const { id } = useParams();
   const accessToken = localStorage.getItem('accessToken');
+
   const [userData, setUserData] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
@@ -14,18 +25,12 @@ const UserProfile = () => {
   });
   const [loading, setLoading] = useState(true);
 
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get(`/user/userbyid/${id}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
+          headers: { Authorization: `Bearer ${accessToken}` },
         });
-
-        console.log('Fetched user data:', response.data);
-        
 
         setUserData(response.data);
         setFormData({
@@ -35,7 +40,7 @@ const UserProfile = () => {
         });
         setLoading(false);
       } catch (error) {
-        console.error('Hiba az adatok lekérésekor:', error);
+        console.error('Error fetching user data:', error);
         setLoading(false);
       }
     };
@@ -43,93 +48,113 @@ const UserProfile = () => {
     fetchData();
   }, [id, accessToken]);
 
-  
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.put(`/user/users/${id}`, formData, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+      await axios.put(`/user/users/${id}`, formData, {
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
-      console.log('Profile updated successfully:', response.data);
-      
-
       setUserData(formData);
       setEditMode(false);
     } catch (error) {
-      console.error('Hiba a profil frissítésekor:', error);
+      console.error('Error updating profile:', error);
     }
   };
 
-
   if (loading) {
-    return <p>Loading user data...</p>;
+    return (
+      <Box sx={{ mt: 10, textAlign: 'center' }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   if (!userData) {
-    return <p>No user data found.</p>;
+    return (
+      <Box sx={{ mt: 10, textAlign: 'center' }}>
+        <Typography variant="h6">No user data found.</Typography>
+      </Box>
+    );
   }
 
   return (
-    <div>
-      <h1>User Profile</h1>
-      {editMode ? (
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label>Email:</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
+    <Box sx={{ p: 4, maxWidth: 600, margin: 'auto' }}>
+      <Paper elevation={4} sx={{ p: 4, borderRadius: 4, backgroundColor: '#fefefe' }}>
+        <Typography variant="h4" fontWeight="bold" textAlign="center" gutterBottom color="primary">
+          User Profile
+        </Typography>
+
+        {editMode ? (
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+            <Stack spacing={3}>
+              <TextField
+                label="Email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                fullWidth
+                required
+              />
+              <TextField
+                label="Username"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                fullWidth
+                required
+              />
+              <TextField
+                label="Profile Picture URL"
+                name="profile_pic"
+                value={formData.profile_pic}
+                onChange={handleInputChange}
+                fullWidth
+              />
+
+              <Stack direction="row" spacing={2} justifyContent="center">
+                <Button variant="contained" type="submit" color="primary">
+                  Save
+                </Button>
+                <Button variant="outlined" onClick={() => setEditMode(false)}>
+                  Cancel
+                </Button>
+              </Stack>
+            </Stack>
+          </Box>
+        ) : (
+          <Box sx={{ textAlign: 'center', mt: 3 }}>
+            <Avatar
+              src={userData.profile_pic}
+              alt="Profile"
+              sx={{ width: 100, height: 100, margin: 'auto', mb: 2 }}
             />
-          </div>
-          <div>
-            <label>Username:</label>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div>
-            <label>Profile Picture URL:</label>
-            <input
-              type="text"
-              name="profile_pic"
-              value={formData.profile_pic}
-              onChange={handleInputChange}
-            />
-          </div>
-          <button type="submit">Save Changes</button>
-          <button type="button" onClick={() => setEditMode(false)}>
-            Cancel
-          </button>
-        </form>
-      ) : (
-        <div>
-          <h2>Profile Details</h2>
-          <p><strong>Email:</strong> {userData.email}</p>
-          <p><strong>Username:</strong> {userData.username}</p>
-          <p><strong>Profile Picture:</strong></p>
-          <img src={userData.profile_pic} alt="Profile" style={{ width: '100px', height: '100px', borderRadius: '50%' }} />
-          <br />
-          <button onClick={() => setEditMode(true)}>Edit Profile</button>
-        </div>
-      )}
-    </div>
+            <Typography variant="h6">
+              <strong>Email:</strong> {userData.email}
+            </Typography>
+            <Typography variant="h6">
+              <strong>Username:</strong> {userData.username}
+            </Typography>
+            <Typography variant="h6">
+              <strong>Role:</strong> {userData.role}
+            </Typography>
+
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => setEditMode(true)}
+              sx={{ mt: 3 }}
+            >
+              Edit Profile
+            </Button>
+          </Box>
+        )}
+      </Paper>
+    </Box>
   );
 };
 
