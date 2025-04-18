@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import DefaultFormFormat from '../DefaultFormFormat';
 import { Button, Input } from '@mui/material';
+import axios from 'axios';
 
 const CreateFormPage = () => {
   const [questions, setQuestions] = useState([]);
@@ -64,25 +65,24 @@ const CreateFormPage = () => {
       }))
     };
 
-    fetch("http://localhost:3000/form/save-forms", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`
-      },
-      body: JSON.stringify(formData),
-    })
-      .then(async response => {
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || "Ismeretlen hiba történt!");
+    axios.post(
+      'http://localhost:3000/form/save-forms',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
         }
-        console.log("Form saved:", data);
-        alert("Űrlap sikeresen elmentve!");
+      }
+    )
+      .then(response => {
+        console.log('Form saved:', response.data);
+        alert('Űrlap sikeresen elmentve!');
       })
       .catch(error => {
-        console.error("Hiba az űrlap mentése közben:", error);
-        alert(`Hiba történt: ${error.message}`);
+        const message = error.response?.data?.message || 'Ismeretlen hiba történt!';
+        console.error('Hiba az űrlap mentése közben:', error);
+        alert(`Hiba történt: ${message}`);
       });
   };
 

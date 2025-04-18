@@ -17,7 +17,7 @@ export default function Navbar({ user, onLogout, onLoginSuccess }) {
     const [currentUser, setCurrentUser] = useState(null);
     const links = [
         { role: rolesEnum.EVERYONE, label: "Home", route: "/" },
-        { role: rolesEnum.EVERYONE, label: "About us", route: "/about-us" },
+        { role: rolesEnum.NOUSER, label: "About us", route: "/about-us" },
         { role: rolesEnum.STUDENT, label: "Student page", route: "/student" },
         { role: rolesEnum.ADMIN, label: "Create Form", route: "/admin/create-form" },
         { role: rolesEnum.STUDENT, label: "Student forms", route: "student/form" },

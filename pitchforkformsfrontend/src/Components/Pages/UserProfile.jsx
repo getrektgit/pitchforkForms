@@ -123,7 +123,6 @@ const UserProfile = () => {
           <h2>Profile Details</h2>
           <p><strong>Email:</strong> {userData.email}</p>
           <p><strong>Username:</strong> {userData.username}</p>
-          <p><strong>Role:</strong> {userData.role}</p>
           <p><strong>Profile Picture:</strong></p>
           <img src={userData.profile_pic} alt="Profile" style={{ width: '100px', height: '100px', borderRadius: '50%' }} />
           <br />
