@@ -126,6 +126,75 @@ router.post("/save-forms", authenticateToken, async (req, res) => {
     });
 });
 
+router.put("/update-form/:id", authenticateToken, async (req, res) => {
+    const formId = req.params.id;
+    const { name, questions } = req.body;
+
+    if (!name || !req.user.id || !Array.isArray(questions)) {
+        return res.status(400).json({ message: "Hiányzó vagy hibás adatok!" });
+    }
+
+    db.beginTransaction(async (err) => {
+        if (err) {
+            console.error("Tranzakciós hiba:", err);
+            return res.status(500).json({ message: "Szerverhiba!" });
+        }
+
+        try {
+            // Form név frissítése
+            await dbQuery("UPDATE forms SET name = ? WHERE id = ? AND creator_id = ?", [name, formId, req.user.id]);
+
+            for (const question of questions) {
+                const { id: questionId, text, type, score, answers } = question;
+
+                let currentQuestionId = questionId;
+
+                if (currentQuestionId) {
+                    // Kérdés frissítése
+                    await dbQuery(
+                        "UPDATE questions SET text = ?, type = ?, score = ? WHERE id = ? AND form_id = ?",
+                        [text, type, score, currentQuestionId, formId]
+                    );
+
+                    // Régi válaszok törlése
+                    await dbQuery("DELETE FROM answer_options WHERE question_id = ?", [currentQuestionId]);
+                } else {
+                    // Új kérdés létrehozása
+                    const questionResult = await dbQuery(
+                        "INSERT INTO questions (text, type, form_id, score) VALUES (?, ?, ?, ?)",
+                        [text, type, formId, score]
+                    );
+                    currentQuestionId = questionResult.insertId;
+                }
+
+                // Új válaszok beszúrása
+                for (const answer of answers) {
+                    const { text, is_right } = answer;
+                    await dbQuery(
+                        "INSERT INTO answer_options (question_id, text, is_right) VALUES (?, ?, ?)",
+                        [currentQuestionId, text, is_right]
+                    );
+                }
+            }
+
+            db.commit((err) => {
+                if (err) {
+                    return db.rollback(() => {
+                        console.error("Commit hiba:", err);
+                        res.status(500).json({ message: "Szerverhiba!" });
+                    });
+                }
+                res.status(200).json({ message: "Űrlap sikeresen frissítve!" });
+            });
+        } catch (error) {
+            db.rollback(() => {
+                console.error("SQL Hiba:", error);
+                res.status(500).json({ message: "Szerverhiba!", error: error.message });
+            });
+        }
+    });
+});
+
 router.post("/forms/evaluate", authenticateToken, async (req, res) => {
     const { form_id, submission_id } = req.body;
 
