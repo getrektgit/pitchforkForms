@@ -29,11 +29,11 @@ router.post("/register", async (req, res) => {
         const sql = "INSERT INTO users (email, username, role, password_hash, profile_pic) VALUES (?, ?, ?, ?, ?)";
 
         const response = dbQuery(sql, [email, username, role, passwordHash, profile_pic])
-        if(response.length === 0){
-            res.status(404).json({message:"Hibas keres"})
+        if (response.length === 0) {
+            res.status(404).json({ message: "Hibas keres" })
         }
-        else{
-            res.status(201).json({message:"Sikeres regisztracio!"})
+        else {
+            res.status(201).json({ message: "Sikeres regisztracio!" })
         }
     } catch (error) {
         console.error(error);
@@ -90,15 +90,25 @@ router.post("/login", (req, res) => {
 
 
 //PROTECTED ROUTE (ADMIN ONLY)
-router.get("/me", authenticateToken, /*isAdmin,*/(req, res) => {
-    const sql_query = "SELECT role FROM users WHERE id = " + req.user.id
-    const results = dbQuery(sql_query)
-    
-    if (results.length === 0) {
-        return res.status(401).json({ message: "Nincs felhasználó a rendszerben!" });
+router.get("/me", authenticateToken, async (req, res) => {
+    try {
+        const sql_query = "SELECT role FROM users WHERE id = ?";
+        const results = await dbQuery(sql_query, [req.user.id]);
+
+        if (results.length === 0) {
+            return res.status(401).json({ message: "Nincs felhasználó a rendszerben!" });
+        }
+
+        res.json({
+            message: "Welcome admin!",
+            user: req.user,
+            role: results[0].role
+        });
+    } catch (error) {
+        console.error("Hiba az /auth/me endpointnál:", error);
+        res.status(500).json({ message: "Szerverhiba az adatok lekérdezésekor." });
     }
-    res.json({ message: "Welcome admin!", user: req.user, role: results[0].role })
-})
+});
 
 
 //NEW ACCESS TOKEN

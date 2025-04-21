@@ -9,28 +9,36 @@ dotenv.config()
 const router = express.Router()
 
 
-//LIST ALL USERS
-router.get("/users",authenticateToken, isAdmin ,async (req, res) => {
-    const sql_query = "SELECT id, email, username, role, profile_pic FROM users"
+//LIST ALL USERS EXCEPT ADMINS
+router.get("/users", authenticateToken, isAdmin, async (req, res) => {
+    const sql_query = "SELECT email, username, role, profile_pic FROM users WHERE role != 'admin'"
     try {
         const results = await dbQuery(sql_query)
         res.json(results)
     } catch (error) {
-        res.status(500).json({message:"Szerverhiba!"})
+        res.status(500).json({ message: "Szerverhiba!" })
     }
 })
 
 //GET USER BY ID
-router.get("/userbyid/:id", (req, res) => {
+router.get("/userbyid/:id", async (req, res) => {
     const userId = req.params.id;
-    const sql_query = "SELECT id, email, username, role, profile_pic FROM users WHERE id = " + userId
 
-    const results = dbQuery(sql_query)
-    if (results.length === 0) {
-        return res.status(401).json({ message: "Nincs felhasználó a rendszerben!" });
+    try {
+        const sql = "SELECT id, email, username, role, profile_pic FROM users WHERE id = ?";
+        const results = await dbQuery(sql, [userId]);
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: "Nincs ilyen felhasználó!" });
+        }
+
+        res.json(results[0]);
+    } catch (err) {
+        console.error("DB hiba:", err);
+        res.status(500).json({ message: "Szerverhiba." });
     }
-    res.json(results)
-})
+});
+
 
 //UPDATE USER
 router.put("/users/:id", authenticateToken, async (req, res) => {
