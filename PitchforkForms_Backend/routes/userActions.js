@@ -9,9 +9,9 @@ dotenv.config()
 const router = express.Router()
 
 
-//LIST ALL USERS
+//LIST ALL USERS EXCEPT ADMINS
 router.get("/users", authenticateToken, isAdmin, async (req, res) => {
-    const sql_query = "SELECT id, email, username, role, profile_pic FROM users"
+    const sql_query = "SELECT email, username, role, profile_pic FROM users WHERE role != 'admin'"
     try {
         const results = await dbQuery(sql_query)
         res.json(results)
