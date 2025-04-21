@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import axios from 'axios';
 import DefaultFormFormat from '../DefaultFormFormat';
-import { 
-  Box, 
-  Typography, 
-  Button, 
-  TextField, 
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
   CircularProgress,
   Alert,
   Snackbar,
@@ -83,9 +83,9 @@ const EditFormPage = () => {
   };
 
   const addNewQuestion = () => {
-    const newQuestion = { 
-      text: "", 
-      type: "radiobutton", 
+    const newQuestion = {
+      text: "",
+      type: "radiobutton",
       score: 0,
       answers: [],
       isMultiple: false
@@ -98,7 +98,6 @@ const EditFormPage = () => {
 
   const handleSaveForm = async () => {
     try {
-      // Validate form
       if (!formName.trim()) {
         setError("Form name is required");
         return;
@@ -109,7 +108,6 @@ const EditFormPage = () => {
         return;
       }
 
-      // Validate each question
       for (let i = 0; i < formData.questions.length; i++) {
         const q = formData.questions[i];
         if (!q.text.trim()) {
@@ -134,15 +132,14 @@ const EditFormPage = () => {
         }
       }
 
-      // Prepare data for API
+      // Payload összeállítása
       const payload = {
-        form_id: id,
         name: formName,
         questions: formData.questions.map(q => ({
+          id: q.id, // Ha új kérdés, undefined marad – ez jó
           text: q.text,
           type: q.type,
           score: Number(q.score),
-          is_multiple: q.isMultiple,
           answers: q.answers.map(a => ({
             text: a.text,
             is_right: a.isCorrect
@@ -150,9 +147,8 @@ const EditFormPage = () => {
         }))
       };
 
-      // Save to API
-      await axios.post(
-        '/form/update',
+      await axios.put(
+        `/form/update-form/${id}`,
         payload,
         {
           headers: {
@@ -168,12 +164,10 @@ const EditFormPage = () => {
       setError(err.response?.data?.message || 'Failed to save form');
     }
   };
-
   const handleCloseAlert = () => {
     setError(null);
     setSuccess(false);
   };
-
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -193,8 +187,8 @@ const EditFormPage = () => {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Paper elevation={3} sx={{ p: 3 }}>
-        <Box sx={{ 
-          display: 'flex', 
+        <Box sx={{
+          display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           mb: 3
@@ -221,7 +215,7 @@ const EditFormPage = () => {
         </Box>
 
         {formData?.questions?.map((question, index) => (
-          <Box key={question.id || index} sx={{ mb: 3 }}>
+          <Box key={question.id ?? `new-${index}`} sx={{ mb: 3 }}>
             <DefaultFormFormat
               index={index}
               question={question}
