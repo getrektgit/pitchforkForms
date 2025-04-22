@@ -10,7 +10,8 @@ CREATE TABLE `users` (
 CREATE TABLE `forms` (
   `id` integer PRIMARY KEY AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
-  `creator_id` integer
+  `creator_id` integer,
+  `sent_out` bool NOT NULL DEFAULT false
 );
 
 CREATE TABLE `questions` (
@@ -33,21 +34,13 @@ CREATE TABLE `submissions` (
   `user_id` integer,
   `form_id` integer,
   `submit_time` datetime NOT NULL,
-  `is_completed` bool NOT NULL DEFAULT false
+  `total_score` integer NOT NULL DEFAULT 0
 );
 
 CREATE TABLE `submission_answers` (
   `id` integer PRIMARY KEY AUTO_INCREMENT,
   `submission_id` integer,
   `answer_id` integer
-);
-
-CREATE TABLE `completed_forms` (
-  `id` integer PRIMARY KEY AUTO_INCREMENT,
-  `user_id` integer,
-  `form_id` integer,
-  `score` integer NOT NULL,
-  `when_completed` datetime NOT NULL
 );
 
 ALTER TABLE `forms` ADD FOREIGN KEY (`creator_id`) REFERENCES `users` (`id`);
@@ -63,10 +56,6 @@ ALTER TABLE `submissions` ADD FOREIGN KEY (`form_id`) REFERENCES `forms` (`id`);
 ALTER TABLE `submission_answers` ADD FOREIGN KEY (`submission_id`) REFERENCES `submissions` (`id`);
 
 ALTER TABLE `submission_answers` ADD FOREIGN KEY (`answer_id`) REFERENCES `answer_options` (`id`);
-
-ALTER TABLE `completed_forms` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
-ALTER TABLE `completed_forms` ADD FOREIGN KEY (`form_id`) REFERENCES `forms` (`id`);
 
 
 INSERT INTO `users` (id, email, username, role, password_hash, profile_pic) VALUES

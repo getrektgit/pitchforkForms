@@ -16,7 +16,7 @@ router.get("/get-basic-info", authenticateToken, async (req, res) => {
         return res.status(400).json({ message: "Nincs megadva felhasználói ID." });
     }
     try {
-        const forms = await dbQuery("SELECT id, name, creator_id FROM forms WHERE creator_id = ?",[userId]);
+        const forms = await dbQuery("SELECT id, name, creator_id FROM forms WHERE creator_id = ?", [userId]);
         res.json(forms);
     } catch (error) {
         console.error("SQL Error:", error);
@@ -195,60 +195,49 @@ router.put("/update-form/:id", authenticateToken, async (req, res) => {
     });
 });
 
-router.post("/forms/evaluate", authenticateToken, async (req, res) => {
-    const { form_id, submission_id } = req.body;
+const total_Score = async (answers) => {
+    let totalScore = 0;
+    for (const answerId of answers) {
+        const questionData = await dbQuery(`
+            SELECT q.id as question_id, q.type, q.score, ao.is_right
+            FROM questions q
+            INNER JOIN answer_options ao ON q.id = ao.question_id
+            WHERE ao.id = ?
+        `, [answerId]);
 
-    if (!form_id || !submission_id) {
-        return res.status(400).json({ message: "Hiányzó adatok!" });
-    }
+        if (questionData.length === 0) continue;
 
-    try {
-        let totalScore = 0;
-        let userScore = 0;
+        const { question_id, type, score, is_right } = questionData[0];
 
-        const questions = await dbQuery("SELECT id, score FROM questions WHERE form_id = ?", [form_id]);
+        if (type === 'radiobutton') {
+            if (is_right) {
+                totalScore += score;
+            }
+        } else if (type === 'checkbox') {
+            if (is_right) {
+                const rightCountData = await dbQuery(`
+                    SELECT COUNT(*) AS right_count
+                    FROM answer_options
+                    WHERE question_id = ? AND is_right = TRUE
+                `, [question_id]);
 
-        for (const question of questions) {
-            const { id: questionId, score } = question;
-            totalScore += score;
-
-            const correctAnswers = await dbQuery(
-                "SELECT id FROM answer_options WHERE question_id = ? AND is_right = 1",
-                [questionId]
-            );
-            const correctIds = correctAnswers.map(ans => Number(ans.id)).sort((a, b) => a - b);
-
-            const userAnswers = await dbQuery(
-                `SELECT sa.answer_id
-                 FROM submission_answers sa
-                 JOIN answer_options ao ON sa.answer_id = ao.id
-                 WHERE sa.submission_id = ? AND ao.question_id = ?`,
-                [submission_id, questionId]
-            );
-            const userAnswerIds = userAnswers.map(a => Number(a.answer_id)).sort((a, b) => a - b);
-            console.log("Kérdés ID:", questionId);
-            console.log("Helyes válaszok:", correctIds);
-            console.log("Beküldött válaszok:", userAnswerIds);
-            const isCorrect = JSON.stringify(correctIds) === JSON.stringify(userAnswerIds);
-            if (isCorrect) {
-                userScore += score;
+                const rightCount = rightCountData[0].right_count;
+                if (rightCount > 0) {
+                    totalScore += score / rightCount;
+                }
             }
         }
-
-        res.json({ message: "Értékelés kész!", score: userScore, maxScore: totalScore });
-    } catch (error) {
-        console.error("Értékelési hiba:", error);
-        res.status(500).json({ message: "Hiba az értékelés során!", error: error.message });
     }
-});
+    return totalScore;
+};
 
-router.post("/forms/save-answers", authenticateToken, async (req, res) => {
+router.post("/submit", authenticateToken, async (req, res) => {
     const { form_id, user_id, answers } = req.body;
 
     if (!form_id || !user_id || !Array.isArray(answers)) {
         return res.status(400).json({ message: "Hiányzó vagy hibás adatok!" });
     }
-
+    const totalScore = await total_Score(answers)
     db.beginTransaction(async (err) => {
         if (err) {
             console.error("Tranzakciós hiba:", err);
@@ -257,15 +246,15 @@ router.post("/forms/save-answers", authenticateToken, async (req, res) => {
 
         try {
             const submissionResult = await dbQuery(
-                "INSERT INTO submissions (user_id, form_id, submit_time) VALUES (?, ?, NOW())",
-                [user_id, form_id]
+                "INSERT INTO submissions (user_id, form_id, submit_time,total_score) VALUES (?, ?, NOW(),?)",
+                [user_id, form_id, totalScore]
             );
             const submissionId = submissionResult.insertId;
 
             for (const answer of answers) {
                 await dbQuery(
                     "INSERT INTO submission_answers (submission_id, answer_id) VALUES (?, ?)",
-                    [submissionId, answer.answer_id]
+                    [submissionId, answer]
                 );
             }
 
