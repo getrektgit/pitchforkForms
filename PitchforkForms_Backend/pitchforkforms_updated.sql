@@ -10,7 +10,8 @@ CREATE TABLE `users` (
 CREATE TABLE `forms` (
   `id` integer PRIMARY KEY AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
-  `creator_id` integer
+  `creator_id` integer,
+  `sent_out` bool NOT NULL DEFAULT false
 );
 
 CREATE TABLE `questions` (
