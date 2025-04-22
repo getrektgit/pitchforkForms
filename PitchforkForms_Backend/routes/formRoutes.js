@@ -16,7 +16,7 @@ router.get("/get-basic-info", authenticateToken, async (req, res) => {
         return res.status(400).json({ message: "Nincs megadva felhasználói ID." });
     }
     try {
-        const forms = await dbQuery("SELECT id, name, creator_id FROM forms WHERE creator_id = ?",[userId]);
+        const forms = await dbQuery("SELECT id, name, creator_id FROM forms WHERE creator_id = ?", [userId]);
         res.json(forms);
     } catch (error) {
         console.error("SQL Error:", error);
@@ -195,7 +195,7 @@ router.put("/update-form/:id", authenticateToken, async (req, res) => {
     });
 });
 
-router.post("/forms/evaluate", authenticateToken, async (req, res) => {
+router.post("/evaluate", authenticateToken, async (req, res) => {
     const { form_id, submission_id } = req.body;
 
     if (!form_id || !submission_id) {
@@ -242,13 +242,33 @@ router.post("/forms/evaluate", authenticateToken, async (req, res) => {
     }
 });
 
-router.post("/forms/save-answers", authenticateToken, async (req, res) => {
+
+const total_Score = async (answers) => {
+    let totalScore = 0
+    for (const answer of answers) {
+        const type = await dbQuery(
+            `SELECT questions.type FROM questions
+                INNER JOIN answer_options
+                ON questions.id = answer_options.question_id
+                WHERE answer_options.id = ${answer}`,
+        );
+        if (type === 'radiobutton') {
+            /*Hozzá adom a total score hoz a question pontszámát ha jó az answer*/
+        }
+        else {
+            /*Ha jó az answer megnézem hogy hány pont jut a checkbox kérdésben egy answer-hez és azt adom hozzá a total score-hoz*/
+        }
+    }
+    return totalScore
+}
+
+router.post("/submit", authenticateToken, async (req, res) => {
     const { form_id, user_id, answers } = req.body;
 
     if (!form_id || !user_id || !Array.isArray(answers)) {
         return res.status(400).json({ message: "Hiányzó vagy hibás adatok!" });
     }
-
+    const totalScore = await total_Score(answers)
     db.beginTransaction(async (err) => {
         if (err) {
             console.error("Tranzakciós hiba:", err);
@@ -257,15 +277,15 @@ router.post("/forms/save-answers", authenticateToken, async (req, res) => {
 
         try {
             const submissionResult = await dbQuery(
-                "INSERT INTO submissions (user_id, form_id, submit_time) VALUES (?, ?, NOW())",
-                [user_id, form_id]
+                "INSERT INTO submissions (user_id, form_id, submit_time,total_score) VALUES (?, ?, NOW(),?)",
+                [user_id, form_id, totalScore]
             );
             const submissionId = submissionResult.insertId;
 
             for (const answer of answers) {
                 await dbQuery(
                     "INSERT INTO submission_answers (submission_id, answer_id) VALUES (?, ?)",
-                    [submissionId, answer.answer_id]
+                    [submissionId, answer]
                 );
             }
 
