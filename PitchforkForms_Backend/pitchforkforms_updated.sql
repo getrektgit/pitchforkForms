@@ -43,20 +43,22 @@ CREATE TABLE `submission_answers` (
   `answer_id` integer
 );
 
+CREATE TABLE `sent_forms` (
+  `id` integer PRIMARY KEY AUTO_INCREMENT,
+  `user_id` integer,
+  `form_id` integer,
+  `sent_at` datetime NOT NULL
+);
+
 ALTER TABLE `forms` ADD FOREIGN KEY (`creator_id`) REFERENCES `users` (`id`);
-
 ALTER TABLE `questions` ADD FOREIGN KEY (`form_id`) REFERENCES `forms` (`id`);
-
 ALTER TABLE `answer_options` ADD FOREIGN KEY (`question_id`) REFERENCES `questions` (`id`);
-
 ALTER TABLE `submissions` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
 ALTER TABLE `submissions` ADD FOREIGN KEY (`form_id`) REFERENCES `forms` (`id`);
-
 ALTER TABLE `submission_answers` ADD FOREIGN KEY (`submission_id`) REFERENCES `submissions` (`id`);
-
 ALTER TABLE `submission_answers` ADD FOREIGN KEY (`answer_id`) REFERENCES `answer_options` (`id`);
-
+ALTER TABLE `sent_forms` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `sent_forms` ADD FOREIGN KEY (`form_id`) REFERENCES `forms` (`id`);
 
 INSERT INTO `users` (id, email, username, role, password_hash, profile_pic) VALUES
 (1, 'balintragats@gmail.com', 'Admin', 'admin', '$2b$10$HByptxncW0r0yY6twKEdvewjbd7cK4VBPySIGI.zgxoEZPvETynTW', NULL),

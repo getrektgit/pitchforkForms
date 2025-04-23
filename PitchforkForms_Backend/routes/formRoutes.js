@@ -277,4 +277,83 @@ router.post("/submit", authenticateToken, async (req, res) => {
         }
     });
 });
+
+router.post("/send-to-students", authenticateToken, async (req, res) => {
+    const { form_id } = req.body;
+
+    if (!form_id) {
+        return res.status(400).json({ message: "Hiányzik a form_id!" });
+    }
+
+    try {
+        const form = await dbQuery("SELECT id FROM forms WHERE id = ?", [form_id]);
+        if (form.length === 0) {
+            return res.status(404).json({ message: "Ez a form nem létezik!" });
+        }
+
+        const students = await dbQuery("SELECT id FROM users WHERE role = 'student'");
+        const now = new Date();
+
+        for (const student of students) {
+            // Előbb ellenőrizd, hogy már ki lett-e küldve ennek a usernek
+            const alreadySent = await dbQuery(
+                "SELECT id FROM sent_forms WHERE user_id = ? AND form_id = ?",
+                [student.id, form_id]
+            );
+
+            if (alreadySent.length === 0) {
+                await dbQuery(
+                    "INSERT INTO sent_forms (user_id, form_id, sent_at) VALUES (?, ?, ?)",
+                    [student.id, form_id, now]
+                );
+            }
+        }
+
+        res.json({
+            message: `A form (ID: ${form_id}) sikeresen kiküldve ${students.length} tanulónak.`,
+        });
+    } catch (error) {
+        console.error("Kiküldési hiba:", error);
+        res.status(500).json({ message: "Hiba a kiküldés során!", error: error.message });
+    }
+});
+
+router.get("/get-form/:id", authenticateToken, async (req, res) => {
+    const formId = req.params.id;
+
+    try {
+        // Lekérdezzük az űrlap alapadatait
+        const form = await dbQuery("SELECT * FROM forms WHERE id = ?", [formId]);
+
+        if (form.length === 0) {
+            return res.status(404).json({ message: "Nem található űrlap ezzel az ID-val!" });
+        }
+
+        // Lekérdezzük a kérdéseket
+        const questions = await dbQuery("SELECT * FROM questions WHERE form_id = ?", [formId]);
+
+        // Minden kérdéshez lekérdezzük a válaszlehetőségeket is
+        for (let question of questions) {
+            const answers = await dbQuery(
+                "SELECT id, text FROM answer_options WHERE question_id = ?",
+                [question.id]
+            );
+            question.answers = answers;
+        }
+
+        res.json({
+            form: {
+                id: form[0].id,
+                name: form[0].name,
+                creator_id: form[0].creator_id,
+                sent_out: form[0].sent_out,
+                questions: questions
+            }
+        });
+    } catch (error) {
+        console.error("Hiba az űrlap lekérdezésénél:", error);
+        res.status(500).json({ message: "Szerverhiba!", error: error.message });
+    }
+});
+
 module.exports = router;
