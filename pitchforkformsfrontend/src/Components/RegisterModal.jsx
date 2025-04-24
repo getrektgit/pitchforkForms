@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { 
-  Modal, 
-  Box, 
-  Typography, 
-  TextField, 
-  Button, 
+import {
+  Modal,
+  Box,
+  Typography,
+  TextField,
+  Button,
   CircularProgress,
   Alert,
   Link,
   Divider,
   InputAdornment,
-  IconButton
+  IconButton,
 } from '@mui/material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -27,29 +27,29 @@ const StyledModalBox = styled(Box)(({ theme }) => ({
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: '#ffffff', // White background for consistency
   borderRadius: theme.shape.borderRadius,
-  boxShadow: theme.shadows[24],
+  boxShadow: '0 4px 14px rgba(16, 46, 80, 0.4)', // Matches MainPage button shadow
   padding: theme.spacing(4),
   width: '100%',
   maxWidth: '450px',
-  outline: 'none'
+  outline: 'none',
 }));
 
 const PasswordStrengthIndicator = ({ password }) => {
   const getStrength = () => {
     if (!password) return 0;
     let strength = 0;
-    
+
     // Length check
     if (password.length >= 8) strength += 1;
     if (password.length >= 12) strength += 1;
-    
+
     // Complexity checks
     if (/[A-Z]/.test(password)) strength += 1;
     if (/[0-9]/.test(password)) strength += 1;
     if (/[^A-Za-z0-9]/.test(password)) strength += 1;
-    
+
     return Math.min(strength, 5);
   };
 
@@ -68,7 +68,7 @@ const PasswordStrengthIndicator = ({ password }) => {
   );
 };
 
-const RegisterModal = ({ open, handleClose }) => {
+const RegisterModal = ({ open, handleClose, handleOpenLogin }) => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -86,27 +86,17 @@ const RegisterModal = ({ open, handleClose }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const validateEmail = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(String(email).toLowerCase());
-  };
-
-  const validateUsername = (username) => {
-    return username.length >= 3 && /^[a-zA-Z0-9_]+$/.test(username);
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
-      [name]: value
+      [name]: value,
     }));
 
-    // Clear error when user types
     if (formErrors[name]) {
-      setFormErrors(prev => ({ ...prev, [name]: "" }));
+      setFormErrors((prev) => ({ ...prev, [name]: '' }));
     }
-    setError("");
+    setError('');
   };
 
   const validateForm = () => {
@@ -119,31 +109,22 @@ const RegisterModal = ({ open, handleClose }) => {
     };
 
     if (!formData.username) {
-      newErrors.username = "Username is required";
-      valid = false;
-    } else if (!validateUsername(formData.username)) {
-      newErrors.username = "Username must be at least 3 characters and contain only letters, numbers, and underscores";
+      newErrors.username = 'Username is required';
       valid = false;
     }
 
     if (!formData.email) {
-      newErrors.email = "Email is required";
-      valid = false;
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = "Please enter a valid email";
+      newErrors.email = 'Email is required';
       valid = false;
     }
 
     if (!formData.password) {
-      newErrors.password = "Password is required";
-      valid = false;
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+      newErrors.password = 'Password is required';
       valid = false;
     }
 
     if (formData.password !== formData.checkPassword) {
-      newErrors.checkPassword = "Passwords do not match";
+      newErrors.checkPassword = 'Passwords do not match';
       valid = false;
     }
 
@@ -153,10 +134,10 @@ const RegisterModal = ({ open, handleClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
-    setError("");
+
+    setError('');
     setLoading(true);
 
     try {
@@ -164,18 +145,17 @@ const RegisterModal = ({ open, handleClose }) => {
         username: formData.username,
         email: formData.email,
         password: formData.password,
-        profile_pic: "https://i.pravatar.cc/150?img=1",
+        profile_pic: 'https://i.pravatar.cc/150?img=1',
       });
 
-      // Optional: Auto-login after registration
-      localStorage.setItem("accessToken", response.data.token);
-      
+      localStorage.setItem('accessToken', response.data.token);
+
       navigate('/');
       handleClose();
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 
-                         error.request ? "No response from server" : 
-                         "An unexpected error occurred";
+      const errorMessage =
+        error.response?.data?.message ||
+        (error.request ? 'No response from server' : 'An unexpected error occurred');
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -192,10 +172,19 @@ const RegisterModal = ({ open, handleClose }) => {
       <StyledModalBox>
         <Box textAlign="center" mb={3}>
           <HowToRegIcon color="primary" sx={{ fontSize: 50 }} />
-          <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 1, fontWeight: 600 }}>
+          <Typography
+            variant="h5"
+            component="h2"
+            gutterBottom
+            sx={{
+              mt: 1,
+              fontWeight: 800, // Matches MainPage header font weight
+              color: '#0B1D33', // Dark blue text for consistency
+            }}
+          >
             Create Account
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{ color: '#1d2e44' }}>
             Join Pitchfork Forms today
           </Typography>
         </Box>
@@ -275,6 +264,7 @@ const RegisterModal = ({ open, handleClose }) => {
                 </InputAdornment>
               ),
             }}
+            sx={{ mb: 2 }}
           />
           <PasswordStrengthIndicator password={formData.password} />
 
@@ -309,21 +299,34 @@ const RegisterModal = ({ open, handleClose }) => {
               mb: 2,
               fontWeight: 'bold',
               fontSize: '1rem',
+              backgroundColor: '#102E50', // Matches MainPage button color
+              '&:hover': {
+                backgroundColor: '#0c2342',
+              },
             }}
             startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
           >
             {loading ? 'Creating Account...' : 'Register'}
           </Button>
 
-          <Divider sx={{ my: 3 }}>Already have an account?</Divider>
+          <Divider sx={{ my: 3, color: '#1d2e44' }}>Already have an account?</Divider>
 
           <Box textAlign="center">
-            <Link 
-              component="button" 
-              variant="body2" 
+            <Link
+              component="button"
+              variant="body2"
               underline="hover"
-              onClick={handleClose}
-              sx={{ fontWeight: 600 }}
+              onClick={() => {
+                handleClose();
+                handleOpenLogin(); // Open the login modal
+              }}
+              sx={{
+                fontWeight: 600,
+                color: '#102E50', // Matches MainPage link color
+                '&:hover': {
+                  textDecoration: 'underline',
+                },
+              }}
             >
               Sign in instead
             </Link>

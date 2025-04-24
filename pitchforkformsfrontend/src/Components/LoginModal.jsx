@@ -27,24 +27,24 @@ const StyledModalBox = styled(Box)(({ theme }) => ({
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: '#ffffff', // White background for consistency with MainPage
   borderRadius: theme.shape.borderRadius,
-  boxShadow: theme.shadows[24],
+  boxShadow: '0 4px 14px rgba(16, 46, 80, 0.4)', // Matches MainPage button shadow
   padding: theme.spacing(4),
   width: '100%',
   maxWidth: '450px',
-  outline: 'none'
+  outline: 'none',
 }));
 
 const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
   const [openRegister, setOpenRegister] = useState(false);
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+    email: '',
+    password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -53,9 +53,9 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
-      [name]: value
+      [name]: value,
     }));
-    setError("");
+    setError('');
   };
 
   const handleCheckboxChange = () => {
@@ -71,18 +71,18 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setLoading(true);
 
     try {
-      const response = await axios.post("/auth/login", formData, {
+      const response = await axios.post('/auth/login', formData, {
         withCredentials: true,
       });
 
-      localStorage.setItem("accessToken", response.data.token);
+      localStorage.setItem('accessToken', response.data.token);
       rememberMe
-        ? localStorage.setItem("rememberMe", "true")
-        : localStorage.removeItem("rememberMe");
+        ? localStorage.setItem('rememberMe', 'true')
+        : localStorage.removeItem('rememberMe');
 
       if (onLoginSuccess) {
         onLoginSuccess({
@@ -93,19 +93,19 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
         });
       }
 
-      if (response.data.role === "admin") {
-        navigate("/admin");
-      } else if (response.data.role === "student") {
-        navigate("/student");
+      if (response.data.role === 'admin') {
+        navigate('/admin');
+      } else if (response.data.role === 'student') {
+        navigate('/student');
       } else {
-        navigate("/");
+        navigate('/');
       }
 
       handleClose();
     } catch (error) {
-      const message = error.response?.data?.message ||
-                      error.request ? "No response from server" :
-                      "An unexpected error occurred";
+      const message =
+        error.response?.data?.message ||
+        (error.request ? 'No response from server' : 'An unexpected error occurred');
       setError(message);
     } finally {
       setLoading(false);
@@ -123,10 +123,19 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
         <StyledModalBox>
           <Box textAlign="center" mb={3}>
             <LoginIcon color="primary" sx={{ fontSize: 50 }} />
-            <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 1, fontWeight: 600 }}>
+            <Typography
+              variant="h5"
+              component="h2"
+              gutterBottom
+              sx={{
+                mt: 1,
+                fontWeight: 800, // Matches MainPage header font weight
+                color: '#0B1D33', // Dark blue text for consistency
+              }}
+            >
               Welcome Back
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{ color: '#1d2e44' }}>
               Login to your Pitchfork Forms account
             </Typography>
           </Box>
@@ -196,7 +205,9 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
                 style={{ marginRight: '8px' }}
               />
               <label htmlFor="rememberMe">
-                <Typography color="text.primary" fontSize="0.9rem">Remember me</Typography>
+                <Typography color="text.primary" fontSize="0.9rem">
+                  Remember me
+                </Typography>
               </label>
             </Box>
 
@@ -211,13 +222,17 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
                 mb: 2,
                 fontWeight: 'bold',
                 fontSize: '1rem',
+                backgroundColor: '#102E50', // Matches MainPage button color
+                '&:hover': {
+                  backgroundColor: '#0c2342',
+                },
               }}
               startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
             >
               {loading ? 'Logging in...' : 'Login'}
             </Button>
 
-            <Divider sx={{ my: 3 }}>New to Pitchfork?</Divider>
+            <Divider sx={{ my: 3, color: '#1d2e44' }}>New to Pitchfork?</Divider>
 
             <Box textAlign="center">
               <Link
@@ -225,7 +240,13 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
                 variant="body2"
                 underline="hover"
                 onClick={handleOpenRegister}
-                sx={{ fontWeight: 600 }}
+                sx={{
+                  fontWeight: 600,
+                  color: '#102E50', // Matches MainPage link color
+                  '&:hover': {
+                    textDecoration: 'underline',
+                  },
+                }}
               >
                 Create an account
               </Link>
