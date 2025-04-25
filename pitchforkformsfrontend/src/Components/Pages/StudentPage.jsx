@@ -14,15 +14,12 @@ const StudentPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/form/get-basic-info', {
+        const response = await axios.get(`/user/pending/${user.id}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
-          params: {
-            userId: user.id,
-          },
         });
-        setForms(response.data);
+        setForms(response.data.forms);
       } catch (error) {
         console.error('Error fetching forms:', error);
         setError(error.response?.data?.message || 'Error loading forms');
@@ -31,11 +28,14 @@ const StudentPage = () => {
       }
     };
 
-    fetchData();
+    if (user?.id) {
+      fetchData();
+    }
   }, [accessToken, user?.id]);
 
+
   return (
-    <Box sx={{ 
+    <Box sx={{
       padding: { xs: 2, sm: 3, md: 4 },
       minHeight: '80vh'
     }}>
