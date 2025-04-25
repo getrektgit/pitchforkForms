@@ -21,7 +21,7 @@ router.get("/users", authenticateToken, isAdmin, async (req, res) => {
 })
 
 //GET USER BY ID
-router.get("/userbyid/:id", async (req, res) => {
+router.get("/userbyid/:id", authenticateToken, async (req, res) => {
     const userId = req.params.id;
 
     try {
@@ -38,7 +38,6 @@ router.get("/userbyid/:id", async (req, res) => {
         res.status(500).json({ message: "Szerverhiba." });
     }
 });
-
 
 //UPDATE USER
 router.put("/users/:id", authenticateToken, async (req, res) => {
@@ -67,7 +66,7 @@ router.put("/users/:id", authenticateToken, async (req, res) => {
 });
 
 //DELETE USER
-router.delete("/users/:id", authenticateToken, isAdmin, async (req, res) => {
+router.delete("/users/:id", authenticateToken, async (req, res) => {
     const userId = req.params.id;
 
     try {
@@ -86,57 +85,59 @@ router.delete("/users/:id", authenticateToken, isAdmin, async (req, res) => {
 });
 
 // GET INCOMPLETE FORMS FOR USER
-router.get("/users/:id/forms/incomplete", async (req, res) => {
-    const userId = req.params.id;
+router.get("/pending/:userId", authenticateToken, async (req, res) => {
+    const userId = req.params.userId;
+
+    if (!userId) {
+        return res.status(400).json({ message: "Hiányzó user ID!" });
+    }
 
     try {
-        const sql = `
-            SELECT f.id, f.title, f.description
-            FROM forms f
-            LEFT JOIN form_submissions fs ON f.id = fs.form_id AND fs.user_id = ?
-            WHERE fs.id IS NULL
-        `;
-        const results = await dbQuery(sql, [userId]);
+        const pendingForms = await dbQuery(
+            `
+            SELECT f.id, f.name, f.creator_id
+            FROM sent_forms sf
+            JOIN forms f ON sf.form_id = f.id
+            WHERE sf.user_id = ?
+            AND f.id NOT IN (
+                SELECT form_id FROM submissions WHERE user_id = ?
+            )
+            `,
+            [userId, userId]
+        );
 
-        
-        if (results.length === 0) {
-            return res.status(404).json({ message: "Nincs kitöltetlen form!" });
-        }
-
-        res.json(results);
-    } catch (err) {
-        console.error("DB hiba:", err);
-        res.status(500).json({ message: "Szerverhiba." });
+        res.json({ forms: pendingForms });
+    } catch (error) {
+        console.error("Hiba a függő űrlapok lekérdezésekor:", error);
+        res.status(500).json({ message: "Szerverhiba!", error: error.message });
     }
 });
 
-  
 // GET COMPLETED FORMS FOR USER
-router.get("/users/:id/forms/completed", async (req, res) => {
-    const userId = req.params.id;
+router.get("/forms/completed/:userId", authenticateToken, async (req, res) => {
+    const userId = req.params.userId;
+
+    if (!userId) {
+        return res.status(400).json({ message: "Hiányzó user ID!" });
+    }
 
     try {
-        const sql = `
-            SELECT f.id, f.title, f.description, fs.submitted_at
-            FROM forms f
-            INNER JOIN form_submissions fs ON f.id = fs.form_id
-            WHERE fs.user_id = ?
-        `;
-        const results = await dbQuery(sql, [userId]);
+        const completedForms = await dbQuery(
+            `
+            SELECT f.id, f.name, f.creator_id, f.sent_out, s.submit_time, s.total_score
+            FROM submissions s
+            JOIN forms f ON s.form_id = f.id
+            WHERE s.user_id = ?
+            `,
+            [userId]
+        );
 
-       
-        if (results.length === 0) {
-            return res.status(404).json({ message: "Nincs kitöltött form!" });
-        }
-
-        res.json(results);
-    } catch (err) {
-        console.error("DB hiba:", err);
-        res.status(500).json({ message: "Szerverhiba." });
+        res.json({ forms: completedForms });
+    } catch (error) {
+        console.error("Hiba a kitöltött űrlapok lekérdezésekor:", error);
+        res.status(500).json({ message: "Szerverhiba!", error: error.message });
     }
 });
-
-
 
 
 module.exports = router

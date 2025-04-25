@@ -3,6 +3,7 @@ const db = require("../config/database");
 const dotenv = require("dotenv");
 const authenticateToken = require("../middlewares/authMiddleware");
 const dbQuery = require("../utils/queryHelper")
+const notifyUser = require("../utils/notifyUser");
 
 dotenv.config();
 const router = express.Router();
@@ -295,7 +296,6 @@ router.post("/send-to-students", authenticateToken, async (req, res) => {
         const now = new Date();
 
         for (const student of students) {
-            // Előbb ellenőrizd, hogy már ki lett-e küldve ennek a usernek
             const alreadySent = await dbQuery(
                 "SELECT id FROM sent_forms WHERE user_id = ? AND form_id = ?",
                 [student.id, form_id]
@@ -308,7 +308,7 @@ router.post("/send-to-students", authenticateToken, async (req, res) => {
                 );
             }
         }
-
+        await notifyUser(form_id);
         res.json({
             message: `A form (ID: ${form_id}) sikeresen kiküldve ${students.length} tanulónak.`,
         });
