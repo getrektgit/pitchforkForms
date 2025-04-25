@@ -124,9 +124,21 @@ router.get("/forms/completed/:userId", authenticateToken, async (req, res) => {
     try {
         const completedForms = await dbQuery(
             `
-            SELECT f.id, f.name, f.creator_id, f.sent_out, s.submit_time, s.total_score
+            SELECT 
+                f.id AS form_id, 
+                f.name, 
+                f.creator_id, 
+                f.sent_out, 
+                s.submit_time, 
+                s.total_score,
+                COALESCE(qs.max_score, 0) AS max_score
             FROM submissions s
             JOIN forms f ON s.form_id = f.id
+            LEFT JOIN (
+                SELECT form_id, SUM(score) AS max_score
+                FROM questions
+                GROUP BY form_id
+            ) qs ON f.id = qs.form_id
             WHERE s.user_id = ?
             `,
             [userId]
