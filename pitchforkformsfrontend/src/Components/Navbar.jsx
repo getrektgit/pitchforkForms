@@ -19,8 +19,8 @@ export default function Navbar({ user, onLogout, onLoginSuccess }) {
         { role: rolesEnum.EVERYONE, label: "Home", route: "/" },
         { role: rolesEnum.NOUSER, label: "About us", route: "/about-us" },
         { role: rolesEnum.STUDENT, label: "Student page", route: "/student" },
+        { role: rolesEnum.STUDENT, label: "Completed Forms", route: '/completed-forms' },
         { role: rolesEnum.ADMIN, label: "Create Form", route: "/admin/create-form" },
-        { role: rolesEnum.STUDENT, label: "Student forms", route: "student/form" },
         { role: rolesEnum.ADMIN, label: "Forms", route: "/admin" },
         { role: rolesEnum.ADMIN, label: "Studens", route: "/admin/all-students" },
     ]

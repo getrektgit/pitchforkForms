@@ -16,6 +16,7 @@ export default function FormCard({ formName, formId }) {
     const [snackbarOpen, setSnackbarOpen] = React.useState(false);
     const [snackbarMessage, setSnackbarMessage] = React.useState('');
     const [snackbarSeverity, setSnackbarSeverity] = React.useState('success');
+    const user = JSON.parse(localStorage.getItem('user'));
 
     const HandleSave = async (formId) => {
         try {
@@ -86,32 +87,43 @@ export default function FormCard({ formName, formId }) {
                         }}
                     />
 
-                    <CardActions sx={{
-                        justifyContent: 'space-between',
-                        padding: 2,
-                        backgroundColor: 'rgba(0, 0, 0, 0.02)',
-                    }}>
-                        <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={() => navigate(`/admin/edit-form/${formId}`)}
-                            sx={{
-                                minWidth: 80,
-                            }}
-                        >
-                            Edit
-                        </Button>
-                        <Button
-                            variant="contained"
-                            size="small"
-                            onClick={() => HandleSave(formId)}
-                            sx={{
-                                minWidth: 80,
-                            }}
-                        >
-                            Send
-                        </Button>
+                    <CardActions
+                        sx={{
+                            justifyContent: user.role === 'student' ? 'center' : 'space-between',
+                            padding: 2,
+                            backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                        }}
+                    >
+                        {user.role === 'student' ? (
+                            <Button
+                                variant="contained"
+                                size="medium"
+                                onClick={() => navigate(`/user/form/fill/${formId}`)}
+                            >
+                                Fill
+                            </Button>
+                        ) : (
+                            <>
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={() => navigate(`/admin/edit-form/${formId}`)}
+                                    sx={{ minWidth: 80 }}
+                                >
+                                    Edit
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    size="small"
+                                    onClick={() => HandleSave(formId)}
+                                    sx={{ minWidth: 80 }}
+                                >
+                                    Send
+                                </Button>
+                            </>
+                        )}
                     </CardActions>
+
                 </Card>
             </Box>
 

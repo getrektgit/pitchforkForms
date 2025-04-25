@@ -5,7 +5,6 @@ import MainPage from './Components/Pages/MainPage';
 import AdminPage from './Components/Pages/AdminPage';
 import StudentPage from './Components/Pages/StudentPage';
 import CreateFormPage from './Components/Pages/CreateFormPage';
-import FormPage from './Components/Pages/FormPage';
 import LoginModal from './Components/LoginModal';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -13,6 +12,8 @@ import UserProfile from './Components/Pages/UserProfile';
 import EditFormPage from './Components/Pages/EditFormPage';
 import AllStudentsPage from './Components/Pages/AllStudentsPage';
 import AboutUsPage from './Components/Pages/AboutUsPage';
+import FillOutPage from './Components/Pages/FillOutPage';
+import FilledOutForms from './Components/Pages/FilledOutForms';
 
 function App() {
   const [openLogin, setOpenLogin] = useState(false);
@@ -147,11 +148,18 @@ function App() {
             <CreateFormPage />
           </ProtectedRoute>
         } />
-        <Route path="/student/form" element={
+        <Route path="/user/form/fill/:id" element={
           <ProtectedRoute allowedRoles={["student"]}>
-            <FormPage />
+            < FillOutPage />
           </ProtectedRoute>
         } />
+
+        <Route path="completed-forms" element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            < FilledOutForms />
+          </ProtectedRoute>
+        } />
+
 
         <Route path="/user/profile/:id" element={
           <ProtectedRoute allowedRoles={["admin", "student"]}>
