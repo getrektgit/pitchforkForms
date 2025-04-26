@@ -13,9 +13,18 @@ const CreateFormPage = () => {
   const handleAddQuestion = () => {
     setQuestions(prevQuestions => [
       ...prevQuestions,
-      { text: "", type: "radiobutton", score: 0 }
+      {
+        text: "",
+        type: "radiobutton",
+        score: 0,
+        isMultiple: false,
+        answers: [
+          { text: "", isCorrect: false }
+        ]
+      }
     ]);
   };
+
 
   const handleDeleteQuestion = (index) => {
     const updated = [...questions];
@@ -58,7 +67,7 @@ const CreateFormPage = () => {
       name: formName,
       questions: questions.map(q => ({
         text: q.text,
-        type: q.type,
+        type: q.isMultiple ? "checkbox" : "radiobutton",
         score: Number(q.score),
         answers: (q.answers || []).map(a => ({
           text: a.text,
@@ -66,6 +75,7 @@ const CreateFormPage = () => {
         }))
       }))
     };
+
 
     axios.post(
       'http://localhost:3000/form/save-forms',
@@ -101,9 +111,9 @@ const CreateFormPage = () => {
 
   return (
     <div>
-      <Box sx={{ 
-        display: 'flex', 
-        gap: 2, 
+      <Box sx={{
+        display: 'flex',
+        gap: 2,
         mb: 3,
         alignItems: 'center'
       }}>
@@ -124,9 +134,9 @@ const CreateFormPage = () => {
             },
           }}
         />
-        <Button 
-          onClick={handleSaveForm} 
-          variant="contained" 
+        <Button
+          onClick={handleSaveForm}
+          variant="contained"
           color="primary"
           startIcon={<SaveIcon />}
           sx={{

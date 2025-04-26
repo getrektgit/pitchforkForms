@@ -12,7 +12,7 @@ import UserProfile from './Components/Pages/UserProfile';
 import EditFormPage from './Components/Pages/EditFormPage';
 import AllStudentsPage from './Components/Pages/AllStudentsPage';
 import AboutUsPage from './Components/Pages/AboutUsPage';
-import FillOutPage from './Components/Pages/FillOutPage';
+import FillOutFormPage from './Components/Pages/FillOutFormPage';
 import FilledOutForms from './Components/Pages/FilledOutForms';
 
 function App() {
@@ -150,7 +150,7 @@ function App() {
         } />
         <Route path="/user/form/fill/:id" element={
           <ProtectedRoute allowedRoles={["student"]}>
-            < FillOutPage />
+            < FillOutFormPage />
           </ProtectedRoute>
         } />
 
