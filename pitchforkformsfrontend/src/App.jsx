@@ -14,6 +14,7 @@ import AllStudentsPage from './Components/Pages/AllStudentsPage';
 import AboutUsPage from './Components/Pages/AboutUsPage';
 import FillOutFormPage from './Components/Pages/FillOutFormPage';
 import FilledOutForms from './Components/Pages/FilledOutForms';
+import CheckAnswersPage from './Components/Pages/CheckAnswersPage';
 
 function App() {
   const [openLogin, setOpenLogin] = useState(false);
@@ -160,6 +161,11 @@ function App() {
           </ProtectedRoute>
         } />
 
+        <Route path="/user/form/view/:id" element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            < CheckAnswersPage />
+          </ProtectedRoute>
+        } />
 
         <Route path="/user/profile/:id" element={
           <ProtectedRoute allowedRoles={["admin", "student"]}>
@@ -172,6 +178,7 @@ function App() {
             <EditFormPage />
           </ProtectedRoute>
         } />
+
         <Route path="/admin/all-students" element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <AllStudentsPage />

@@ -39,7 +39,7 @@ export default function Navbar({ user, onLogout, onLoginSuccess }) {
     const navigate = useNavigate();
 
     const links = [
-        { role: rolesEnum.EVERYONE, label: "Home", route: "/" },
+        { role: rolesEnum.NOUSER, label: "Home", route: "/" },
         { role: rolesEnum.NOUSER, label: "About us", route: "/about-us" },
         { role: rolesEnum.STUDENT, label: "Student page", route: "/student" },
         { role: rolesEnum.STUDENT, label: "Completed Forms", route: '/completed-forms' },

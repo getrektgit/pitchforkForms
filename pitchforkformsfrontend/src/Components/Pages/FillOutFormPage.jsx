@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
     Box,
@@ -22,7 +23,7 @@ const FillOutFormPage = () => {
 
     const accessToken = localStorage.getItem('accessToken');
     const user = JSON.parse(localStorage.getItem('user'));
-
+    const navigate = useNavigate();
     useEffect(() => {
         axios.get(`/form/get-form/${id}`, {
             headers: {
@@ -77,6 +78,7 @@ const FillOutFormPage = () => {
             const message = err.response?.data?.message || "Submission failed.";
             setSubmitStatus({ type: "error", message });
         }
+        navigate(`/user/form/view/${id}`)
     };
 
     if (loading) return <Box display="flex" justifyContent="center" mt={5}><CircularProgress /></Box>;
