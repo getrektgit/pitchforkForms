@@ -90,7 +90,7 @@ const FillOutFormPage = () => {
             <Typography variant="h4" gutterBottom>{form.name}</Typography>
 
             {form.questions.map((q, i) => {
-                const isMultiple = q.type === 'checkbox'; // 🛠️ Move it here (per question)
+                const isMultiple = q.type === 'checkbox';
 
                 return (
                     <Paper key={q.id} sx={{ p: 2, my: 2 }}>

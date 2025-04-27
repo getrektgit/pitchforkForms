@@ -356,4 +356,82 @@ router.get("/get-form/:id", authenticateToken, async (req, res) => {
     }
 });
 
+router.get('/admin/students-forms/:id', async (req, res) => {
+    try {
+        const studentId = req.params.id; // Get the student ID from the URL parameter
+
+        // Query to get the student details
+        const studentQuery = `
+            SELECT id, username, email
+            FROM users
+            WHERE id = ? AND role = 'student'
+        `;
+        const student = await dbQuery(studentQuery, [studentId]);
+
+        if (student.length === 0) {
+            return res.status(404).json({ message: "Student not found." });
+        }
+
+        // Query to get the forms sent to the student
+        const sentForms = await dbQuery(`
+            SELECT sf.form_id, sf.sent_at, f.name AS form_name
+            FROM sent_forms sf
+            JOIN forms f ON sf.form_id = f.id
+            WHERE sf.user_id = ?
+        `, [studentId]);
+
+        // Query to get the submissions made by the student
+        const submissions = await dbQuery(`
+            SELECT form_id, submit_time, total_score
+            FROM submissions
+            WHERE user_id = ?
+        `, [studentId]);
+
+        // Query to get the maximum points for each form
+        const maxPointsForForms = await dbQuery(`
+            SELECT q.form_id, SUM(q.score) AS max_points
+            FROM questions q
+            GROUP BY q.form_id
+        `);
+
+        // Map the forms sent to the student with their submission status and scores
+        const formsInfo = sentForms.map(sf => {
+            const submission = submissions.find(sub => sub.form_id === sf.form_id);
+            const maxPoints = maxPointsForForms.find(mp => mp.form_id === sf.form_id)?.max_points || 0;
+
+            if (submission) {
+                return {
+                    formName: sf.form_name,
+                    status: 'completed',
+                    submitTime: submission.submit_time,
+                    totalScore: submission.total_score,
+                    maxPoints: maxPoints,
+                };
+            } else {
+                return {
+                    formName: sf.form_name,
+                    status: 'not completed',
+                    message: 'Student has not filled out this form yet.',
+                    maxPoints: maxPoints,
+                };
+            }
+        });
+
+        // Construct the response object
+        const studentData = {
+            id: student[0].id,
+            username: student[0].username,
+            email: student[0].email,
+            forms: formsInfo,
+        };
+
+        res.json(studentData);
+
+    } catch (error) {
+        console.error("Error fetching student forms:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+}); 
+
+
 module.exports = router;

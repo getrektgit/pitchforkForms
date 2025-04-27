@@ -11,14 +11,14 @@ const router = express.Router()
 
 //LIST ALL USERS EXCEPT ADMINS
 router.get("/users", authenticateToken, isAdmin, async (req, res) => {
-    const sql_query = "SELECT email, username, role, profile_pic FROM users WHERE role != 'admin'"
+    const sql_query = "SELECT email, username, role, id, profile_pic FROM users WHERE role != 'admin'";
     try {
-        const results = await dbQuery(sql_query)
-        res.json(results)
+        const results = await dbQuery(sql_query);
+        res.json(results);
     } catch (error) {
-        res.status(500).json({ message: "Szerverhiba!" })
+        res.status(500).json({ message: "Szerverhiba!" });
     }
-})
+});
 
 //GET USER BY ID
 router.get("/userbyid/:id", authenticateToken, async (req, res) => {

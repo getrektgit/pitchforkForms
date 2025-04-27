@@ -15,6 +15,7 @@ import AboutUsPage from './Components/Pages/AboutUsPage';
 import FillOutFormPage from './Components/Pages/FillOutFormPage';
 import FilledOutForms from './Components/Pages/FilledOutForms';
 import CheckAnswersPage from './Components/Pages/CheckAnswersPage';
+import StudentsCompletedForms from './Components/Pages/StudentsCompletedForms';
 
 function App() {
   const [openLogin, setOpenLogin] = useState(false);
@@ -24,10 +25,9 @@ function App() {
   const handleCloseLogin = () => setOpenLogin(false);
 
   const ProtectedRoute = ({ children, allowedRoles }) => {
-    const role = user.role;
+    const role = user?.role;
     if (!user) {
       return <Navigate to="/" replace />;
-
     }
     if (allowedRoles.includes(role)) {
       return children;
@@ -149,21 +149,29 @@ function App() {
             <CreateFormPage />
           </ProtectedRoute>
         } />
-        <Route path="/user/form/fill/:id" element={
-          <ProtectedRoute allowedRoles={["student"]}>
-            < FillOutFormPage />
+
+        {/* Route for viewing a student's completed forms */}
+        <Route path="/admin/student-forms/:id" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <StudentsCompletedForms />
           </ProtectedRoute>
         } />
 
-        <Route path="completed-forms" element={
+        <Route path="/user/form/fill/:id" element={
           <ProtectedRoute allowedRoles={["student"]}>
-            < FilledOutForms />
+            <FillOutFormPage />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/completed-forms" element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <FilledOutForms />
           </ProtectedRoute>
         } />
 
         <Route path="/user/form/view/:id" element={
-          <ProtectedRoute allowedRoles={["student"]}>
-            < CheckAnswersPage />
+          <ProtectedRoute allowedRoles={["student","admin"]}>
+            <CheckAnswersPage />
           </ProtectedRoute>
         } />
 
@@ -179,6 +187,7 @@ function App() {
           </ProtectedRoute>
         } />
 
+        {/* Route for All Students Page */}
         <Route path="/admin/all-students" element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <AllStudentsPage />
