@@ -76,7 +76,7 @@ router.post("/login", (req, res) => {
             process.env.REFRESH_SECRET,
             { expiresIn: "3h" }
         )
-
+        
         activeRefreshTokens.add(refreshToken)
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
@@ -146,8 +146,8 @@ router.post("/refresh", (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000,
         })
 
-        const sql_query = "SELECT email,role FROM users WHERE id = " + user.id
-        db.query(sql_query, async (err, results) => {
+        const sql_query = "SELECT email,role FROM users WHERE id = ?" 
+        db.query(sql_query,[user.id], async (err, results) => {
             if (err) {
                 console.error("SQL error:", err)
                 res.status(500).json({ message: "Szerverhiba!" })

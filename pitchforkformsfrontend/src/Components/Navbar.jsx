@@ -21,7 +21,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import Logout from '@mui/icons-material/Logout';
 import LoginModal from './LoginModal';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 export default function Navbar({ user, onLogout, onLoginSuccess }) {
@@ -46,7 +46,7 @@ export default function Navbar({ user, onLogout, onLoginSuccess }) {
         { role: rolesEnum.ADMIN, label: "Create Form", route: "/admin/create-form" },
         { role: rolesEnum.ADMIN, label: "Forms", route: "/admin" },
         { role: rolesEnum.ADMIN, label: "Students", route: "/admin/all-students" },
-        
+
     ];
 
     const handleDrawerToggle = () => {
@@ -67,9 +67,9 @@ export default function Navbar({ user, onLogout, onLoginSuccess }) {
         setOpenLogin(false);
     };
 
-    const handleLogoutClick = () => {
+    const handleLogoutClick = async () => {
         try {
-            axios.post('/auth/logout', {}, { withCredentials: true });
+            await axios.post('/auth/logout', {}, { withCredentials: true });
         } catch (error) {
             console.error("Error during logout:", error);
         }
@@ -80,6 +80,7 @@ export default function Navbar({ user, onLogout, onLoginSuccess }) {
         setCurrentUser(null);
         navigate("/");
     };
+
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
