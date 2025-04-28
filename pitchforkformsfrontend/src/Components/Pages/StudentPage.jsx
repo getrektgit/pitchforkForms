@@ -61,7 +61,7 @@ const StudentPage = () => {
           textAlign: 'center',
           gap: 2
         }}>
-          <Typography variant="h6" color="textSecondary">
+          <Typography variant="h6" color="#ffffff">
             No forms available for you yet.
           </Typography>
         </Box>

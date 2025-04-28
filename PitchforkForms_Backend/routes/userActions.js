@@ -65,11 +65,17 @@ router.put("/users/:id", authenticateToken, async (req, res) => {
     }
 });
 
+const deleteSentFormsByUserId = async (userId) => {
+    const sql = "DELETE FROM sent_forms WHERE user_id = ?";
+    const result = await dbQuery(sql, [userId]);
+}
+
 //DELETE USER
 router.delete("/users/:id", authenticateToken, async (req, res) => {
     const userId = req.params.id;
 
     try {
+        deleteSentFormsByUserId(userId)
         const sql = "DELETE FROM users WHERE id = ?";
         const result = await dbQuery(sql, [userId]);
 

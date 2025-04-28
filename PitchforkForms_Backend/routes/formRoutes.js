@@ -8,7 +8,16 @@ const notifyUser = require("../utils/notifyUser");
 dotenv.config();
 const router = express.Router();
 
-
+const checkSubmissions = async (forms) => {
+    console.log(forms)
+    let tempForms = []
+    for (const index in forms) {
+        const element = forms[index]
+        const submissions = await dbQuery("SELECT form_id FROM submissions WHERE form_id = ?", [element.id])
+        tempForms.push({ isFilledOutAtLeastOnce: !!submissions.length, ...element })
+    }
+    return tempForms
+}
 
 //GET /get-basic-info – Az alapadatok lekérése
 router.get("/get-basic-info", authenticateToken, async (req, res) => {
@@ -17,7 +26,9 @@ router.get("/get-basic-info", authenticateToken, async (req, res) => {
         return res.status(400).json({ message: "Nincs megadva felhasználói ID." });
     }
     try {
-        const forms = await dbQuery("SELECT id, name, creator_id FROM forms WHERE creator_id = ?", [userId]);
+        let forms = await dbQuery("SELECT id, name, creator_id FROM forms WHERE creator_id = ?", [userId]);
+        forms = await checkSubmissions(forms);
+        console.log(forms)
         res.json(forms);
     } catch (error) {
         console.error("SQL Error:", error);
@@ -431,7 +442,7 @@ router.get('/admin/students-forms/:id', async (req, res) => {
         console.error("Error fetching student forms:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
-}); 
+});
 
 
 module.exports = router;

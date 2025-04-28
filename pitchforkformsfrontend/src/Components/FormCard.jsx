@@ -11,7 +11,7 @@ import axios from 'axios';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
-export default function FormCard({ formName, formId }) {
+export default function FormCard({ formName, formId, isEditDisabled }) {
     const navigate = useNavigate();
     const [snackbarOpen, setSnackbarOpen] = React.useState(false);
     const [snackbarMessage, setSnackbarMessage] = React.useState('');
@@ -109,6 +109,7 @@ export default function FormCard({ formName, formId }) {
                                     size="small"
                                     onClick={() => navigate(`/admin/edit-form/${formId}`)}
                                     sx={{ minWidth: 80 }}
+                                    disabled={isEditDisabled}
                                 >
                                     Edit
                                 </Button>

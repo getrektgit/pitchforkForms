@@ -42,7 +42,7 @@ const AdminPage = () => {
   };
 
   return (
-    <Box sx={{ 
+    <Box sx={{
       padding: { xs: 2, sm: 3, md: 4 },
       minHeight: '80vh'
     }}>
@@ -87,7 +87,7 @@ const AdminPage = () => {
           textAlign: 'center',
           gap: 2
         }}>
-          <Typography variant="h6" color="textSecondary">
+          <Typography variant="h6" color="#ffffff">
             You don't have any forms yet
           </Typography>
           <Button
@@ -102,7 +102,7 @@ const AdminPage = () => {
         <Grid container spacing={3}>
           {forms.map((form) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={form.id} margin={6}>
-              <FormCard formName={form.name} formId={form.id} />
+              <FormCard formName={form.name} formId={form.id} isEditDisabled={form.isFilledOutAtLeastOnce} />
             </Grid>
           ))}
         </Grid>
