@@ -445,4 +445,68 @@ router.get('/admin/students-forms/:id', async (req, res) => {
 });
 
 
+router.delete("/delete-form/:id", authenticateToken, async (req, res) => {
+    const formId = req.params.id;
+    const userId = req.user.id;
+
+    db.beginTransaction(async (err) => {
+        if (err) {
+            console.error("Tranzakciós hiba:", err);
+            return res.status(500).json({ message: "Szerverhiba!" });
+        }
+
+        try {
+            // Ellenőrizzük, hogy a form létezik és a felhasználó a készítője-e
+            const form = await dbQuery("SELECT * FROM forms WHERE id = ? AND creator_id = ?", [formId, userId]);
+
+            if (form.length === 0) {
+                return res.status(403).json({ message: "Nincs jogosultságod törölni ezt az űrlapot vagy nem létezik." });
+            }
+
+            // Törlés a submission_answers táblából
+            await dbQuery(`
+                DELETE sa FROM submission_answers sa
+                JOIN submissions s ON sa.submission_id = s.id
+                WHERE s.form_id = ?
+            `, [formId]);
+
+            // Törlés a submissions táblából
+            await dbQuery("DELETE FROM submissions WHERE form_id = ?", [formId]);
+
+            // Törlés a sent_forms táblából
+            await dbQuery("DELETE FROM sent_forms WHERE form_id = ?", [formId]);
+
+            // Törlés a answer_options táblából
+            await dbQuery(`
+                DELETE ao FROM answer_options ao
+                JOIN questions q ON ao.question_id = q.id
+                WHERE q.form_id = ?
+            `, [formId]);
+
+            // Törlés a questions táblából
+            await dbQuery("DELETE FROM questions WHERE form_id = ?", [formId]);
+
+            // Törlés a forms táblából
+            await dbQuery("DELETE FROM forms WHERE id = ?", [formId]);
+
+            db.commit((err) => {
+                if (err) {
+                    return db.rollback(() => {
+                        console.error("Commit hiba:", err);
+                        res.status(500).json({ message: "Szerverhiba törlés közben!" });
+                    });
+                }
+
+                res.json({ message: "Űrlap sikeresen törölve!" });
+            });
+        } catch (error) {
+            db.rollback(() => {
+                console.error("SQL Hiba a törlés során:", error);
+                res.status(500).json({ message: "Hiba a törlés során!", error: error.message });
+            });
+        }
+    });
+});
+
+
 module.exports = router;

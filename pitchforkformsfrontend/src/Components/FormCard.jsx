@@ -31,6 +31,28 @@ export default function FormCard({ formName, formId, isEditDisabled }) {
         }
     };
 
+
+    const handleDelete = async (formId) => {
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            const response = await axios.delete(`/form/delete-form/${formId}`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+            setSnackbarMessage(response.data.message || 'Űrlap törölve!');
+            setSnackbarSeverity('success');
+            setSnackbarOpen(true);
+            window.location.reload();
+
+        } catch (error) {
+            setSnackbarMessage(error.response?.data?.message || 'Hiba a törlés során!');
+            setSnackbarSeverity('error');
+            setSnackbarOpen(true);
+        }
+    };
+
+
     const handleCloseSnackbar = (event, reason) => {
         if (reason === 'clickaway') return;
         setSnackbarOpen(false);
@@ -121,7 +143,17 @@ export default function FormCard({ formName, formId, isEditDisabled }) {
                                 >
                                     Send
                                 </Button>
+                                <Button
+                                    variant="outlined"
+                                    color="error"
+                                    size="small"
+                                    onClick={() => handleDelete(formId)}
+                                    sx={{ minWidth: 80 }}
+                                >
+                                    Delete
+                                </Button>
                             </>
+
                         )}
                     </CardActions>
 

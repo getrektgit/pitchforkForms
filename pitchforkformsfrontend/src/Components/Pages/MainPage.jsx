@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { Box, Typography, Button, Grid, Paper } from '@mui/material';
-import Carousel from '../Carousel';
-import RegisterModal from '../RegisterModal';
-import LoginModal from '../LoginModal';
+
+const Carousel = lazy(() => import('../Carousel'));
+const RegisterModal = lazy(() => import('../RegisterModal'));
+const LoginModal = lazy(() => import('../LoginModal'));
 
 const MainPage = () => {
   const [openLogin, setOpenLogin] = useState(false);
@@ -12,26 +13,22 @@ const MainPage = () => {
   const handleCloseRegister = () => setOpenRegister(false);
   const handleOpenLogin = () => setOpenLogin(true);
   const handleCloseLogin = () => setOpenLogin(false);
+
   return (
     <Box
       sx={{
         textAlign: 'center',
         py: 8,
         px: 2,
-        backgroundColor: '#9FB3DF', // Light blue background
+        backgroundColor: '#9FB3DF',
         borderRadius: 4,
         boxShadow: 3,
         minHeight: '100vh',
       }}
     >
-      {/* Header Section */}
       <Typography
         variant="h2"
-        sx={{
-          fontWeight: 800,
-          mb: 2,
-          color: '#0B1D33', // Dark blue text for the title
-        }}
+        sx={{ fontWeight: 800, mb: 2, color: '#0B1D33' }}
       >
         Pitchfork Forms
       </Typography>
@@ -42,7 +39,7 @@ const MainPage = () => {
           maxWidth: 700,
           mx: 'auto',
           mb: 5,
-          color: '#1d2e44', // Grayish-blue text for the subtitle
+          color: '#1d2e44',
           fontSize: '1.15rem',
         }}
       >
@@ -50,17 +47,17 @@ const MainPage = () => {
         and simplify your workflow in minutes.
       </Typography>
 
-      {/* Carousel Section */}
-      <Carousel />
+      <Suspense fallback={<div>Loading Carousel...</div>}>
+        <Carousel />
+      </Suspense>
 
-      {/* Call to Action Button */}
       <Box sx={{ mt: 5 }}>
         <Button
           variant="contained"
           size="large"
           onClick={handleOpenRegister}
           sx={{
-            backgroundColor: '#102E50', // Dark blue button
+            backgroundColor: '#102E50',
             px: 4,
             py: 1.5,
             borderRadius: '30px',
@@ -76,7 +73,6 @@ const MainPage = () => {
         </Button>
       </Box>
 
-      {/* Features Section */}
       <Box sx={{ mt: 10, textAlign: 'center' }}>
         <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#0B1D33' }}>
           What You Can Expect
@@ -105,8 +101,8 @@ const MainPage = () => {
                 sx={{
                   p: 4,
                   borderRadius: 4,
-                  backgroundColor: 'white', // White background for readability
-                  color: '#0B1D33', // Dark text for contrast
+                  backgroundColor: 'white',
+                  color: '#0B1D33',
                   textAlign: 'left',
                   transition: 'transform 0.3s ease',
                   '&:hover': {
@@ -127,7 +123,6 @@ const MainPage = () => {
         </Grid>
       </Box>
 
-      {/* Steps Section */}
       <Box sx={{ mt: 12, textAlign: 'center' }}>
         <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#0B1D33' }}>
           Just 3 Simple Steps
@@ -146,8 +141,8 @@ const MainPage = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  backgroundColor: 'white', // White background for readability
-                  color: '#0B1D33', // Dark text for contrast
+                  backgroundColor: 'white',
+                  color: '#0B1D33',
                   transition: 'all 0.3s ease',
                   '&:hover': {
                     backgroundColor: '#f0f0f0',
@@ -160,7 +155,7 @@ const MainPage = () => {
                     width: 50,
                     height: 50,
                     borderRadius: '50%',
-                    backgroundColor: '#102E50', // Dark blue circle
+                    backgroundColor: '#102E50',
                     color: 'white',
                     display: 'flex',
                     alignItems: 'center',
@@ -181,12 +176,11 @@ const MainPage = () => {
         </Grid>
       </Box>
 
-      {/* Call to Action Footer */}
       <Box
         sx={{
           mt: 10,
           p: 5,
-          bgcolor: '#102E50', // Dark blue footer background
+          bgcolor: '#102E50',
           color: 'white',
           borderRadius: 2,
         }}
@@ -211,15 +205,21 @@ const MainPage = () => {
         </Button>
       </Box>
 
-      <RegisterModal
-        open={openRegister}
-        handleClose={handleCloseRegister}
-        handleOpenLogin={handleOpenLogin}
-      />
-      <LoginModal
-        open={openLogin}
-        handleClose={handleCloseLogin}
-      />
+      <Suspense fallback={null}>
+        {openRegister && (
+          <RegisterModal
+            open={openRegister}
+            handleClose={handleCloseRegister}
+            handleOpenLogin={handleOpenLogin}
+          />
+        )}
+        {openLogin && (
+          <LoginModal
+            open={openLogin}
+            handleClose={handleCloseLogin}
+          />
+        )}
+      </Suspense>
     </Box>
   );
 };
