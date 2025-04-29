@@ -9,7 +9,7 @@ dotenv.config();
 const router = express.Router();
 
 const checkSubmissions = async (forms) => {
-    console.log(forms)
+
     let tempForms = []
     for (const index in forms) {
         const element = forms[index]
@@ -28,7 +28,7 @@ router.get("/get-basic-info", authenticateToken, async (req, res) => {
     try {
         let forms = await dbQuery("SELECT id, name, creator_id FROM forms WHERE creator_id = ?", [userId]);
         forms = await checkSubmissions(forms);
-        console.log(forms)
+
         res.json(forms);
     } catch (error) {
         console.error("SQL Error:", error);
