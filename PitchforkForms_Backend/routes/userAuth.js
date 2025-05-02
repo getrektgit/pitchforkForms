@@ -28,7 +28,7 @@ router.post("/register", async (req, res) => {
         const role = "student"
         const sql = "INSERT INTO users (email, username, role, password_hash, profile_pic) VALUES (?, ?, ?, ?, ?)";
 
-        const response = dbQuery(sql, [email, username, role, passwordHash, profile_pic])
+        const response = await dbQuery(sql, [email, username, role, passwordHash, profile_pic])
         if (response.length === 0) {
             res.status(404).json({ message: "Hibas keres" })
         }
