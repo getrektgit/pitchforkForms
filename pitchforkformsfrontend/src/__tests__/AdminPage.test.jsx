@@ -10,6 +10,7 @@ jest.mock('axios');
 
 jest.mock('../Components/FormCard', () => () => <div data-testid="form-card">FormCard</div>);
 jest.mock('@mui/icons-material/Add', () => () => <span>AddIcon</span>);
+jest.spyOn(console, 'error').mockImplementation(() => {});
 
 describe('AdminPage', () => {
   beforeEach(() => {

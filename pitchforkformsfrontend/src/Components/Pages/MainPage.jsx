@@ -28,7 +28,12 @@ const MainPage = () => {
     >
       <Typography
         variant="h2"
-        sx={{ fontWeight: 800, mb: 2, color: '#0B1D33' }}
+        sx={{
+          fontWeight: 800,
+          mb: 2,
+          color: '#0B1D33',
+          fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
+        }}
       >
         Pitchfork Forms
       </Typography>
@@ -40,7 +45,7 @@ const MainPage = () => {
           mx: 'auto',
           mb: 5,
           color: '#1d2e44',
-          fontSize: '1.15rem',
+          fontSize: { xs: '1rem', sm: '1.15rem', md: '1.25rem' },
         }}
       >
         Create, share, and evaluate forms with ease. Automate grading, track performance,
@@ -62,7 +67,7 @@ const MainPage = () => {
             py: 1.5,
             borderRadius: '30px',
             fontWeight: 'bold',
-            fontSize: '1rem',
+            fontSize: { xs: '1rem', sm: '1.125rem' },
             boxShadow: '0 4px 14px rgba(16, 46, 80, 0.4)',
             '&:hover': {
               backgroundColor: '#0c2342',
@@ -161,7 +166,7 @@ const MainPage = () => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 'bold',
-                    fontSize: '1.25rem',
+                    fontSize: { xs: '1rem', sm: '1.25rem' },
                     mb: 2,
                   }}
                 >
