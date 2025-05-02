@@ -228,5 +228,5 @@ describe("User routes",()=>{
             ['updated@example.com', 'updateduser', 'https://example.com/pic.jpg', mockUserId]
           );
         });
-      });
+    });
 })

@@ -40,7 +40,7 @@ Welcome to the backend of PitchforkForms! This repository contains the server-si
 
 - `npm run dev`: Start the development server.
 - `npm run build`: Build the project for production.
-- `npm start`: Start the production server.
+- `node server.js`: Start the production server.
 - `npm test`: Run tests.
 
 ## Contributing
