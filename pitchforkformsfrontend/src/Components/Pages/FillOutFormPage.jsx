@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
     Box,
@@ -22,7 +23,7 @@ const FillOutFormPage = () => {
 
     const accessToken = localStorage.getItem('accessToken');
     const user = JSON.parse(localStorage.getItem('user'));
-
+    const navigate = useNavigate();
     useEffect(() => {
         axios.get(`/form/get-form/${id}`, {
             headers: {
@@ -77,49 +78,53 @@ const FillOutFormPage = () => {
             const message = err.response?.data?.message || "Submission failed.";
             setSubmitStatus({ type: "error", message });
         }
+        navigate(`/user/form/view/${id}`)
     };
 
-    if (loading) return <CircularProgress />;
+    if (loading) return <Box display="flex" justifyContent="center" mt={5}><CircularProgress /></Box>;
 
     if (!form) return <Typography color="error">Could not load form.</Typography>;
 
     return (
-        <Box>
+        <Box sx={{ padding: 3 }}>
             <Typography variant="h4" gutterBottom>{form.name}</Typography>
 
-            {form.questions.map((q, i) => (
-                <Paper key={q.id} sx={{ p: 2, my: 2 }}>
-                    <Typography variant="h6">{i + 1}. {q.text}</Typography>
-                    <Box mt={1}>
-                        {q.answers.map(answer => {
-                            const isMultiple = q.type === 'checkbox';
-                            const selected = selectedAnswers[q.id] || [];
-                            const isChecked = selected.includes(answer.id);
+            {form.questions.map((q, i) => {
+                const isMultiple = q.type === 'checkbox';
 
-                            return (
-                                <FormControlLabel
-                                    key={answer.id}
-                                    control={
-                                        isMultiple ? (
-                                            <Checkbox
-                                                checked={isChecked}
-                                                onChange={() => handleAnswerChange(q.id, answer.id, true)}
-                                            />
-                                        ) : (
-                                            <Radio
-                                                checked={isChecked}
-                                                onChange={() => handleAnswerChange(q.id, answer.id, false)}
-                                                name={`question-${q.id}`}
-                                            />
-                                        )
-                                    }
-                                    label={answer.text}
-                                />
-                            );
-                        })}
-                    </Box>
-                </Paper>
-            ))}
+                return (
+                    <Paper key={q.id} sx={{ p: 2, my: 2 }}>
+                        <Typography variant="h6">{i + 1}. {q.text}</Typography>
+                        <Box mt={1}>
+                            {q.answers.map(answer => {
+                                const selected = selectedAnswers[q.id] || [];
+                                const isChecked = selected.includes(answer.id);
+
+                                return (
+                                    <FormControlLabel
+                                        key={answer.id}
+                                        control={
+                                            isMultiple ? (
+                                                <Checkbox
+                                                    checked={isChecked}
+                                                    onChange={() => handleAnswerChange(q.id, answer.id, true)}
+                                                />
+                                            ) : (
+                                                <Radio
+                                                    checked={isChecked}
+                                                    onChange={() => handleAnswerChange(q.id, answer.id, false)}
+                                                    name={`question-${q.id}`}
+                                                />
+                                            )
+                                        }
+                                        label={answer.text}
+                                    />
+                                );
+                            })}
+                        </Box>
+                    </Paper>
+                );
+            })}
 
             {submitStatus && (
                 <Alert severity={submitStatus.type} sx={{ mb: 2 }}>

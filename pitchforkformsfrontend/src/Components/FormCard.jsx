@@ -11,7 +11,7 @@ import axios from 'axios';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
-export default function FormCard({ formName, formId }) {
+export default function FormCard({ formName, formId, isEditDisabled }) {
     const navigate = useNavigate();
     const [snackbarOpen, setSnackbarOpen] = React.useState(false);
     const [snackbarMessage, setSnackbarMessage] = React.useState('');
@@ -30,6 +30,28 @@ export default function FormCard({ formName, formId }) {
             setSnackbarOpen(true);
         }
     };
+
+
+    const handleDelete = async (formId) => {
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            const response = await axios.delete(`/form/delete-form/${formId}`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+            setSnackbarMessage(response.data.message || 'Űrlap törölve!');
+            setSnackbarSeverity('success');
+            setSnackbarOpen(true);
+            window.location.reload();
+
+        } catch (error) {
+            setSnackbarMessage(error.response?.data?.message || 'Hiba a törlés során!');
+            setSnackbarSeverity('error');
+            setSnackbarOpen(true);
+        }
+    };
+
 
     const handleCloseSnackbar = (event, reason) => {
         if (reason === 'clickaway') return;
@@ -109,6 +131,7 @@ export default function FormCard({ formName, formId }) {
                                     size="small"
                                     onClick={() => navigate(`/admin/edit-form/${formId}`)}
                                     sx={{ minWidth: 80 }}
+                                    disabled={isEditDisabled}
                                 >
                                     Edit
                                 </Button>
@@ -120,7 +143,17 @@ export default function FormCard({ formName, formId }) {
                                 >
                                     Send
                                 </Button>
+                                <Button
+                                    variant="outlined"
+                                    color="error"
+                                    size="small"
+                                    onClick={() => handleDelete(formId)}
+                                    sx={{ minWidth: 80 }}
+                                >
+                                    Delete
+                                </Button>
                             </>
+
                         )}
                     </CardActions>
 

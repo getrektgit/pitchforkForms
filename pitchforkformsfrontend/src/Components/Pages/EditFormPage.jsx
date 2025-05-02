@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import axios from 'axios';
 import DefaultFormFormat from '../DefaultFormFormat';
@@ -8,40 +8,32 @@ import {
   Button,
   TextField,
   CircularProgress,
-  Alert,
   Snackbar,
-  Paper,
-  IconButton,
-  Tooltip,
+  Alert,
+  Fab,
   Container
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 const EditFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-  const [formName, setFormName] = useState("");
+  const [popup, setPopup] = useState({ open: false, severity: 'info', message: '' });
+  const [formName, setFormName] = useState('');
+  const bottomRef = useRef(null);
   const accessToken = localStorage.getItem('accessToken');
 
   useEffect(() => {
     const fetchForm = async () => {
       try {
         setLoading(true);
-        const res = await axios.post(
-          '/form/get-all',
-          { form_id: id },
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
-        );
+        const res = await axios.post('/form/get-all', { form_id: id }, {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
 
         const processedQuestions = res.data.questions.map((q) => ({
           ...q,
@@ -52,14 +44,10 @@ const EditFormPage = () => {
           isMultiple: q.answers.filter((a) => a.is_right).length > 1,
         }));
 
-        setFormData({
-          ...res.data,
-          questions: processedQuestions,
-        });
+        setFormData({ ...res.data, questions: processedQuestions });
         setFormName(res.data.name);
       } catch (err) {
-        console.error('Error fetching form:', err);
-        setError(err.response?.data?.message || 'Failed to load form');
+        showPopup(err.response?.data?.message || 'Failed to load form', 'error');
       } finally {
         setLoading(false);
       }
@@ -68,12 +56,23 @@ const EditFormPage = () => {
     fetchForm();
   }, [id, accessToken]);
 
+  useEffect(() => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [formData?.questions?.length]);
+
+  const showPopup = (message, severity = 'info') => {
+    setPopup({ open: true, severity, message });
+  };
+
+  const handleClosePopup = () => {
+    setPopup({ ...popup, open: false });
+  };
+
   const saveQuestionAttribute = (index, key, value) => {
     const updatedQuestions = [...formData.questions];
-    updatedQuestions[index] = {
-      ...updatedQuestions[index],
-      [key]: value,
-    };
+    updatedQuestions[index] = { ...updatedQuestions[index], [key]: value };
     setFormData({ ...formData, questions: updatedQuestions });
   };
 
@@ -84,10 +83,10 @@ const EditFormPage = () => {
 
   const addNewQuestion = () => {
     const newQuestion = {
-      text: "",
-      type: "radiobutton",
+      text: '',
+      type: 'radiobutton',
       score: 0,
-      answers: [],
+      answers: [{ text: '', isCorrect: false }],
       isMultiple: false
     };
     setFormData({
@@ -97,77 +96,64 @@ const EditFormPage = () => {
   };
 
   const handleSaveForm = async () => {
-    try {
-      if (!formName.trim()) {
-        setError("Form name is required");
+    if (!formName.trim()) {
+      showPopup('The form needs a name!', 'warning');
+      return;
+    }
+
+    if (!formData.questions || formData.questions.length === 0) {
+      showPopup('You need to add at least one question!', 'warning');
+      return;
+    }
+
+    for (let i = 0; i < formData.questions.length; i++) {
+      const q = formData.questions[i];
+      if (!q.text.trim()) {
+        showPopup(`Question ${i + 1} is missing text!`, 'warning');
         return;
       }
-
-      if (!formData.questions || formData.questions.length === 0) {
-        setError("At least one question is required");
+      if (!q.answers || q.answers.length === 0) {
+        showPopup(`Question ${i + 1} has no answers!`, 'warning');
         return;
       }
-
-      for (let i = 0; i < formData.questions.length; i++) {
-        const q = formData.questions[i];
-        if (!q.text.trim()) {
-          setError(`Question ${i + 1} text is empty`);
-          return;
-        }
-
-        if (!q.answers || q.answers.length === 0) {
-          setError(`Question ${i + 1} has no answers`);
-          return;
-        }
-
-        const emptyAnswers = q.answers.filter(a => !a.text.trim());
-        if (emptyAnswers.length > 0) {
-          setError(`Question ${i + 1} has empty answers`);
-          return;
-        }
-
-        if (!q.answers.some(a => a.isCorrect)) {
-          setError(`Question ${i + 1} has no correct answer`);
-          return;
-        }
+      const emptyAnswers = q.answers.filter(a => !a.text.trim());
+      if (emptyAnswers.length > 0) {
+        showPopup(`Question ${i + 1} has empty answer fields!`, 'warning');
+        return;
       }
+    }
 
-      // Payload összeállítása
-      const payload = {
-        name: formName,
-        questions: formData.questions.map(q => ({
-          id: q.id, // Ha új kérdés, undefined marad – ez jó
-          text: q.text,
-          type: q.type,
-          score: Number(q.score),
-          answers: q.answers.map(a => ({
-            text: a.text,
-            is_right: a.isCorrect
-          }))
+    const payload = {
+      name: formName,
+      questions: formData.questions.map(q => ({
+        id: q.id,
+        text: q.text,
+        type: q.isMultiple ? 'checkbox' : 'radiobutton',
+        score: Number(q.score),
+        answers: q.answers.map(a => ({
+          text: a.text,
+          is_right: a.isCorrect
         }))
-      };
+      }))
+    };
 
-      await axios.put(
-        `/form/update-form/${id}`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          }
+    try {
+      await axios.put(`/form/update-form/${id}`, payload, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
         }
-      );
-
-      setSuccess(true);
-      setTimeout(() => navigate(-1), 1500);
+      });
+      showPopup('Form saved successfully!', 'success');
+      setTimeout(() => navigate('/admin'), 1500);
     } catch (err) {
-      console.error('Error saving form:', err);
-      setError(err.response?.data?.message || 'Failed to save form');
+      showPopup(err.response?.data?.message || 'Failed to save form', 'error');
     }
   };
-  const handleCloseAlert = () => {
-    setError(null);
-    setSuccess(false);
+
+  const handleScrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -176,99 +162,140 @@ const EditFormPage = () => {
     );
   }
 
-  if (error && !formData) {
-    return (
-      <Alert severity="error" sx={{ m: 2 }}>
-        {error}
-      </Alert>
-    );
-  }
-
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Paper elevation={3} sx={{ p: 3 }}>
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 3
-        }}>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
-            Edit Form
-          </Typography>
-          <Tooltip title="Back to forms">
-            <IconButton onClick={() => navigate(-1)}>
-              <ArrowBackIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
+    <Container
+      maxWidth="lg"
+      sx={{
+        py: { xs: 3, md: 6 },
+        px: { xs: 2, md: 4 },
+      }}
+    >
+      <Typography
+        variant="h4"
+        sx={{
+          fontSize: { xs: '1.8rem', md: '2.5rem' },
+          color: 'white',
+          fontWeight: 'bold',
+          mb: { xs: 3, md: 5 },
+          textAlign: 'center',
+        }}
+      >
+        Edit Form
+      </Typography>
 
-        <Box sx={{ mb: 4 }}>
-          <TextField
-            fullWidth
-            label="Form Name"
-            variant="outlined"
-            value={formName}
-            onChange={(e) => setFormName(e.target.value)}
-            sx={{ mb: 2 }}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: 2,
+          mb: { xs: 3, md: 5 },
+          alignItems: 'center',
+        }}
+      >
+        <TextField
+          fullWidth
+          variant="outlined"
+          label="Form Name"
+          InputLabelProps={{ style: { color: 'white' } }}
+          InputProps={{ style: { color: 'white' } }}
+          value={formName}
+          onChange={(e) => setFormName(e.target.value)}
+          sx={{
+            flexGrow: 1,
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': { borderColor: 'white' },
+              '&:hover fieldset': { borderColor: '#90caf9' },
+            },
+          }}
+        />
+        <Button
+          onClick={handleSaveForm}
+          variant="contained"
+          color="primary"
+          startIcon={<SaveIcon />}
+          sx={{
+            mt: { xs: 2, md: 0 },
+            px: { xs: 3, md: 4 },
+            py: { xs: 1.5, md: 2 },
+            fontWeight: 'bold',
+            textTransform: 'none',
+            borderRadius: 2,
+            boxShadow: 2,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Save Form
+        </Button>
+      </Box>
+
+      {formData.questions.map((question, index) => (
+        <Box key={question.id ?? `new-${index}`} sx={{ mb: { xs: 4, md: 5 } }}>
+          <DefaultFormFormat
+            index={index}
+            question={question}
+            saveQuestionAttribute={saveQuestionAttribute}
+            deleteQuestion={deleteQuestion}
           />
         </Box>
+      ))}
 
-        {formData?.questions?.map((question, index) => (
-          <Box key={question.id ?? `new-${index}`} sx={{ mb: 3 }}>
-            <DefaultFormFormat
-              index={index}
-              question={question}
-              saveQuestionAttribute={saveQuestionAttribute}
-              deleteQuestion={deleteQuestion}
-            />
-          </Box>
-        ))}
+      <div ref={bottomRef} />
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-          <Button
-            variant="contained"
-            color="secondary"
-            startIcon={<AddCircleOutlineIcon />}
-            onClick={addNewQuestion}
-            sx={{ px: 4 }}
-          >
-            Add Question
-          </Button>
-
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<SaveIcon />}
-            onClick={handleSaveForm}
-            sx={{ px: 4 }}
-          >
-            Save Form
-          </Button>
-        </Box>
-      </Paper>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 4, md: 6 } }}>
+        <Button
+          onClick={addNewQuestion}
+          variant="contained"
+          color="success"
+          startIcon={<AddCircleOutlineIcon />}
+          sx={{
+            px: { xs: 4, md: 6 },
+            py: { xs: 1.5, md: 2 },
+            fontWeight: 'bold',
+            textTransform: 'none',
+            borderRadius: 2,
+            boxShadow: 3,
+            '&:hover': {
+              backgroundColor: 'success.dark',
+            },
+          }}
+        >
+          Add Question
+        </Button>
+      </Box>
 
       <Snackbar
-        open={!!error}
-        autoHideDuration={6000}
-        onClose={handleCloseAlert}
+        open={popup.open}
+        autoHideDuration={4000}
+        onClose={handleClosePopup}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseAlert} severity="error" sx={{ width: '100%' }}>
-          {error}
+        <Alert
+          onClose={handleClosePopup}
+          severity={popup.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {popup.message}
         </Alert>
       </Snackbar>
 
-      <Snackbar
-        open={success}
-        autoHideDuration={6000}
-        onClose={handleCloseAlert}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      <Fab
+        color="secondary"
+        size="small"
+        onClick={handleScrollToTop}
+        sx={{
+          position: 'fixed',
+          bottom: { xs: 20, md: 30 },
+          right: { xs: 20, md: 30 },
+          zIndex: 1000,
+          backgroundColor: '#ffffff22',
+          '&:hover': {
+            backgroundColor: '#ffffff44',
+          }
+        }}
       >
-        <Alert onClose={handleCloseAlert} severity="success" sx={{ width: '100%' }}>
-          Form saved successfully! Redirecting...
-        </Alert>
-      </Snackbar>
+        <KeyboardArrowUpIcon sx={{ color: 'white' }} />
+      </Fab>
     </Container>
   );
 };

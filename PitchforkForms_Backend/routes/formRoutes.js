@@ -8,7 +8,16 @@ const notifyUser = require("../utils/notifyUser");
 dotenv.config();
 const router = express.Router();
 
+const checkSubmissions = async (forms) => {
 
+    let tempForms = []
+    for (const index in forms) {
+        const element = forms[index]
+        const submissions = await dbQuery("SELECT form_id FROM submissions WHERE form_id = ?", [element.id])
+        tempForms.push({ isFilledOutAtLeastOnce: !!submissions.length, ...element })
+    }
+    return tempForms
+}
 
 //GET /get-basic-info – Az alapadatok lekérése
 router.get("/get-basic-info", authenticateToken, async (req, res) => {
@@ -17,7 +26,9 @@ router.get("/get-basic-info", authenticateToken, async (req, res) => {
         return res.status(400).json({ message: "Nincs megadva felhasználói ID." });
     }
     try {
-        const forms = await dbQuery("SELECT id, name, creator_id FROM forms WHERE creator_id = ?", [userId]);
+        let forms = await dbQuery("SELECT id, name, creator_id FROM forms WHERE creator_id = ?", [userId]);
+        forms = await checkSubmissions(forms);
+
         res.json(forms);
     } catch (error) {
         console.error("SQL Error:", error);
@@ -355,5 +366,147 @@ router.get("/get-form/:id", authenticateToken, async (req, res) => {
         res.status(500).json({ message: "Szerverhiba!", error: error.message });
     }
 });
+
+router.get('/admin/students-forms/:id', async (req, res) => {
+    try {
+        const studentId = req.params.id; // Get the student ID from the URL parameter
+
+        // Query to get the student details
+        const studentQuery = `
+            SELECT id, username, email
+            FROM users
+            WHERE id = ? AND role = 'student'
+        `;
+        const student = await dbQuery(studentQuery, [studentId]);
+
+        if (student.length === 0) {
+            return res.status(404).json({ message: "Student not found." });
+        }
+
+        // Query to get the forms sent to the student
+        const sentForms = await dbQuery(`
+            SELECT sf.form_id, sf.sent_at, f.name AS form_name
+            FROM sent_forms sf
+            JOIN forms f ON sf.form_id = f.id
+            WHERE sf.user_id = ?
+        `, [studentId]);
+
+        // Query to get the submissions made by the student
+        const submissions = await dbQuery(`
+            SELECT form_id, submit_time, total_score
+            FROM submissions
+            WHERE user_id = ?
+        `, [studentId]);
+
+        // Query to get the maximum points for each form
+        const maxPointsForForms = await dbQuery(`
+            SELECT q.form_id, SUM(q.score) AS max_points
+            FROM questions q
+            GROUP BY q.form_id
+        `);
+
+        // Map the forms sent to the student with their submission status and scores
+        const formsInfo = sentForms.map(sf => {
+            const submission = submissions.find(sub => sub.form_id === sf.form_id);
+            const maxPoints = maxPointsForForms.find(mp => mp.form_id === sf.form_id)?.max_points || 0;
+
+            if (submission) {
+                return {
+                    formName: sf.form_name,
+                    status: 'completed',
+                    submitTime: submission.submit_time,
+                    totalScore: submission.total_score,
+                    maxPoints: maxPoints,
+                };
+            } else {
+                return {
+                    formName: sf.form_name,
+                    status: 'not completed',
+                    message: 'Student has not filled out this form yet.',
+                    maxPoints: maxPoints,
+                };
+            }
+        });
+
+        // Construct the response object
+        const studentData = {
+            id: student[0].id,
+            username: student[0].username,
+            email: student[0].email,
+            forms: formsInfo,
+        };
+
+        res.json(studentData);
+
+    } catch (error) {
+        console.error("Error fetching student forms:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+
+router.delete("/delete-form/:id", authenticateToken, async (req, res) => {
+    const formId = req.params.id;
+    const userId = req.user.id;
+
+    db.beginTransaction(async (err) => {
+        if (err) {
+            console.error("Tranzakciós hiba:", err);
+            return res.status(500).json({ message: "Szerverhiba!" });
+        }
+
+        try {
+            // Ellenőrizzük, hogy a form létezik és a felhasználó a készítője-e
+            const form = await dbQuery("SELECT * FROM forms WHERE id = ? AND creator_id = ?", [formId, userId]);
+
+            if (form.length === 0) {
+                return res.status(403).json({ message: "Nincs jogosultságod törölni ezt az űrlapot vagy nem létezik." });
+            }
+
+            // Törlés a submission_answers táblából
+            await dbQuery(`
+                DELETE sa FROM submission_answers sa
+                JOIN submissions s ON sa.submission_id = s.id
+                WHERE s.form_id = ?
+            `, [formId]);
+
+            // Törlés a submissions táblából
+            await dbQuery("DELETE FROM submissions WHERE form_id = ?", [formId]);
+
+            // Törlés a sent_forms táblából
+            await dbQuery("DELETE FROM sent_forms WHERE form_id = ?", [formId]);
+
+            // Törlés a answer_options táblából
+            await dbQuery(`
+                DELETE ao FROM answer_options ao
+                JOIN questions q ON ao.question_id = q.id
+                WHERE q.form_id = ?
+            `, [formId]);
+
+            // Törlés a questions táblából
+            await dbQuery("DELETE FROM questions WHERE form_id = ?", [formId]);
+
+            // Törlés a forms táblából
+            await dbQuery("DELETE FROM forms WHERE id = ?", [formId]);
+
+            db.commit((err) => {
+                if (err) {
+                    return db.rollback(() => {
+                        console.error("Commit hiba:", err);
+                        res.status(500).json({ message: "Szerverhiba törlés közben!" });
+                    });
+                }
+
+                res.json({ message: "Űrlap sikeresen törölve!" });
+            });
+        } catch (error) {
+            db.rollback(() => {
+                console.error("SQL Hiba a törlés során:", error);
+                res.status(500).json({ message: "Hiba a törlés során!", error: error.message });
+            });
+        }
+    });
+});
+
 
 module.exports = router;

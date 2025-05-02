@@ -27,9 +27,9 @@ const StyledModalBox = styled(Box)(({ theme }) => ({
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  backgroundColor: '#ffffff', // White background for consistency with MainPage
+  backgroundColor: '#ffffff',
   borderRadius: theme.shape.borderRadius,
-  boxShadow: '0 4px 14px rgba(16, 46, 80, 0.4)', // Matches MainPage button shadow
+  boxShadow: '0 4px 14px rgba(16, 46, 80, 0.4)',
   padding: theme.spacing(4),
   width: '100%',
   maxWidth: '450px',
@@ -73,17 +73,18 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
+  
     try {
       const response = await axios.post('/auth/login', formData, {
         withCredentials: true,
       });
 
       localStorage.setItem('accessToken', response.data.token);
+  
       rememberMe
         ? localStorage.setItem('rememberMe', 'true')
         : localStorage.removeItem('rememberMe');
-
+  
       if (onLoginSuccess) {
         onLoginSuccess({
           id: response.data.id,
@@ -92,7 +93,7 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
           role: response.data.role,
         });
       }
-
+  
       if (response.data.role === 'admin') {
         navigate('/admin');
       } else if (response.data.role === 'student') {
@@ -100,9 +101,10 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
       } else {
         navigate('/');
       }
-
+  
       handleClose();
     } catch (error) {
+
       const message =
         error.response?.data?.message ||
         (error.request ? 'No response from server' : 'An unexpected error occurred');
@@ -111,6 +113,7 @@ const LoginModal = ({ open, handleClose, onLoginSuccess }) => {
       setLoading(false);
     }
   };
+  
 
   return (
     <>

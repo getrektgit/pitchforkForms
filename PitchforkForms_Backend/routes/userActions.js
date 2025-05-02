@@ -11,14 +11,14 @@ const router = express.Router()
 
 //LIST ALL USERS EXCEPT ADMINS
 router.get("/users", authenticateToken, isAdmin, async (req, res) => {
-    const sql_query = "SELECT email, username, role, profile_pic FROM users WHERE role != 'admin'"
+    const sql_query = "SELECT email, username, role, id, profile_pic FROM users WHERE role != 'admin'";
     try {
-        const results = await dbQuery(sql_query)
-        res.json(results)
+        const results = await dbQuery(sql_query);
+        res.json(results);
     } catch (error) {
-        res.status(500).json({ message: "Szerverhiba!" })
+        res.status(500).json({ message: "Szerverhiba!" });
     }
-})
+});
 
 //GET USER BY ID
 router.get("/userbyid/:id", authenticateToken, async (req, res) => {
@@ -65,11 +65,17 @@ router.put("/users/:id", authenticateToken, async (req, res) => {
     }
 });
 
+const deleteSentFormsByUserId = async (userId) => {
+    const sql = "DELETE FROM sent_forms WHERE user_id = ?";
+    const result = await dbQuery(sql, [userId]);
+}
+
 //DELETE USER
 router.delete("/users/:id", authenticateToken, async (req, res) => {
     const userId = req.params.id;
 
     try {
+        deleteSentFormsByUserId(userId)
         const sql = "DELETE FROM users WHERE id = ?";
         const result = await dbQuery(sql, [userId]);
 
@@ -150,6 +156,71 @@ router.get("/forms/completed/:userId", authenticateToken, async (req, res) => {
         res.status(500).json({ message: "Szerverhiba!", error: error.message });
     }
 });
+
+// GET COMPLETED FORM DETAILS FOR USER (with answers)
+router.get("/form/completed/:formId/user/:userId", authenticateToken, async (req, res) => {
+    const { formId, userId } = req.params;
+
+    if (!formId || !userId) {
+        return res.status(400).json({ message: "Missing form ID or user ID" });
+    }
+
+    try {
+        // Fetch form questions with their answer options
+        const formDetailsQuery = `
+            SELECT q.id AS question_id, q.text AS question_text, 
+                ao.id AS answer_option_id, ao.text AS answer_option_text,
+                ao.is_right AS is_right_answer,
+                EXISTS (
+                    SELECT 1 
+                    FROM submission_answers sa
+                    WHERE sa.submission_id = s.id AND sa.answer_id = ao.id
+                ) AS is_answer_selected
+            FROM questions q
+            JOIN answer_options ao ON q.id = ao.question_id
+            JOIN submissions s ON s.form_id = q.form_id
+            WHERE q.form_id = ? AND s.user_id = ?
+        `;
+
+        // Fetch the form submission data
+        const completedFormDetails = await dbQuery(formDetailsQuery, [formId, userId]);
+
+        // If no form found for the user, return a 404
+        if (completedFormDetails.length === 0) {
+            return res.status(404).json({ message: "No completed form found for this user" });
+        }
+
+        // Process the result to structure the response
+        const questions = [];
+        completedFormDetails.forEach((row) => {
+            let question = questions.find((q) => q.question_id === row.question_id);
+
+            if (!question) {
+                question = {
+                    question_id: row.question_id,
+                    question_text: row.question_text,
+                    answer_options: [],
+                };
+                questions.push(question);
+            }
+
+            question.answer_options.push({
+                answer_option_id: row.answer_option_id,
+                answer_option_text: row.answer_option_text,
+                is_right_answer: row.is_right_answer,
+                is_answer_selected: row.is_answer_selected,
+            });
+        });
+
+        // Respond with the structured data
+        res.json({ formDetails: questions });
+    } catch (error) {
+        console.error("Error fetching form details:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+});
+
+
 
 
 module.exports = router
