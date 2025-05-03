@@ -321,7 +321,7 @@ router.post("/send-to-students", authenticateToken, async (req, res) => {
         }
         await notifyUser(form_id);
         res.json({
-            message: `A form (ID: ${formData.name}) sikeresen kiküldve ${students.length} tanulónak.`,
+            message: `A form (${formData.name}) sikeresen kiküldve ${students.length} tanulónak.`,
         });
     } catch (error) {
         console.error("Kiküldési hiba:", error);
