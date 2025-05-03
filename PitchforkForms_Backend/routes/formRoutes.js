@@ -298,11 +298,11 @@ router.post("/send-to-students", authenticateToken, async (req, res) => {
     }
 
     try {
-        const form = await dbQuery("SELECT id FROM forms WHERE id = ?", [form_id]);
+        const form = await dbQuery("SELECT id, name FROM forms WHERE id = ?", [form_id]);
         if (form.length === 0) {
             return res.status(404).json({ message: "Ez a form nem létezik!" });
         }
-
+        const formData = form[0];
         const students = await dbQuery("SELECT id FROM users WHERE role = 'student'");
         const now = new Date();
 
@@ -321,7 +321,7 @@ router.post("/send-to-students", authenticateToken, async (req, res) => {
         }
         await notifyUser(form_id);
         res.json({
-            message: `A form (ID: ${form_id}) sikeresen kiküldve ${students.length} tanulónak.`,
+            message: `A form (ID: ${formData.name}) sikeresen kiküldve ${students.length} tanulónak.`,
         });
     } catch (error) {
         console.error("Kiküldési hiba:", error);
