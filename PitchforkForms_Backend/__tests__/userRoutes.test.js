@@ -85,83 +85,75 @@ describe("User routes",()=>{
             });
     });
 
-    describe('POST /auth/login', () => {
+    describe("POST /auth/login", () => {
+
+      it("should return 400 if email or password is missing", async () => {
+        const response = await request(app)
+          .post("/auth/login")
+          .send({ email: "", password: "" });
     
-        it('should return 400 if email or password is missing', async () => {
-            const response = await request(app)
-              .post('/auth/login')
-              .send({ email: '', password: '' });
-            
-            expect(response.statusCode).toBe(400);
-            expect(response.body).toEqual({ message: 'Adj meg emailt és jelszót!' });
-            
-            expect(db.query).not.toHaveBeenCalled();
-          });
-        
-          it('should return 401 if user is not found', async () => {
-            db.query.mockImplementation((sql, params, callback) => {
-              callback(null, []);
-            });
-        
-            const response = await request(app)
-              .post('/auth/login')
-              .send({ email: 'nonexistent@example.com', password: 'password123' });
-            
-            expect(response.statusCode).toBe(401);
-            expect(response.body).toEqual({ message: 'Hibás email vagy jelszó!' });
-            
-            expect(db.query).toHaveBeenCalledWith(
-              'SELECT * FROM users WHERE email = ?',
-              ['nonexistent@example.com'],
-              expect.any(Function)
-            );
-            
-            expect(bcrypt.compare).not.toHaveBeenCalled();
-          });
-        
-          it('should return 200 with token on successful login', async () => {
-            const mockUser = {
-              id: 1,
-              email: 'test@example.com',
-              username: 'testuser',
-              role: 'user',
-              password_hash: 'hashedpassword'
-            };
-        
-            db.query.mockImplementation((sql, params, callback) => {
-              callback(null, [mockUser]);
-            });
-            
-            bcrypt.compare.mockResolvedValue(true);
-            
-            jwt.sign.mockReturnValueOnce('fake-access-token');
-            jwt.sign.mockReturnValueOnce('fake-refresh-token');
-            
-            const response = await request(app)
-              .post('/auth/login')
-              .send({ email: 'test@example.com', password: 'correctpassword' });
-            
-            expect(response.statusCode).toBe(200);
-            expect(response.body).toEqual({
-              message: 'Sikeres bejelentkezés!',
-              token: 'fake-access-token',
-              id: 1,
-              username: 'testuser',
-              email: 'test@example.com',
-              role: 'user'
-            });
-            
-            expect(bcrypt.compare).toHaveBeenCalledWith('correctpassword', 'hashedpassword');
-            
-            expect(jwt.sign).toHaveBeenCalledWith(
-              { id: 1, email: 'test@example.com', role: 'user' },
-              expect.any(String),
-              { expiresIn: '1h' }
-            );
-            
-            expect(response.headers['set-cookie']).toBeDefined();
-            expect(response.headers['set-cookie'][0]).toContain('refreshToken');
-          });
+        expect(response.statusCode).toBe(400);
+        expect(response.body).toEqual({ message: "Adj meg emailt és jelszót!" });
+        expect(dbQuery).not.toHaveBeenCalled();
+      });
+    
+      it("should return 400 if user is not found", async () => {
+        dbQuery.mockResolvedValue([]);
+    
+        const response = await request(app)
+          .post("/auth/login")
+          .send({ email: "nonexistent@example.com", password: "password123" });
+    
+        expect(response.statusCode).toBe(400);
+        expect(response.body).toEqual({ message: "Hibás email vagy jelszó!" });
+        expect(dbQuery).toHaveBeenCalledWith(
+          "SELECT * FROM users WHERE email = ?",
+          ["nonexistent@example.com"]
+        );
+        expect(bcrypt.compare).not.toHaveBeenCalled();
+      });
+    
+      it("should return 200 with token on successful login", async () => {
+        const mockUser = {
+          id: 1,
+          email: "test@example.com",
+          username: "testuser",
+          role: "user",
+          password_hash: "hashedpassword"
+        };
+    
+        dbQuery.mockResolvedValue([mockUser]);
+        bcrypt.compare.mockResolvedValue(true);
+        jwt.sign
+          .mockReturnValueOnce("fake-access-token") // access token
+          .mockReturnValueOnce("fake-refresh-token"); // refresh token
+    
+        const response = await request(app)
+          .post("/auth/login")
+          .send({ email: "test@example.com", password: "correctpassword" });
+    
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toEqual({
+          message: "Sikeres bejelentkezés!",
+          token: "fake-access-token",
+          id: 1,
+          username: "testuser",
+          email: "test@example.com",
+          role: "user"
+        });
+    
+        expect(bcrypt.compare).toHaveBeenCalledWith("correctpassword", "hashedpassword");
+    
+        expect(jwt.sign).toHaveBeenCalledWith(
+          { id: 1, email: "test@example.com", role: "user" },
+          expect.any(String),
+          { expiresIn: "1h" }
+        );
+    
+        expect(response.headers["set-cookie"]).toBeDefined();
+        expect(response.headers["set-cookie"][0]).toContain("refreshToken");
+      });
+    
     });
 
     describe('PUT /users/:id', () => {

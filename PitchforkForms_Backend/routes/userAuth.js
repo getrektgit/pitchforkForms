@@ -3,7 +3,6 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
-const db = require("../config/database");
 const authenticateToken = require("../middlewares/authMiddleware")
 const dbQuery = require("../utils/queryHelper")
 
@@ -42,28 +41,26 @@ router.post("/register", async (req, res) => {
 });
 
 //LOGIN
-router.post("/login", (req, res) => {
+router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
         return res.status(400).json({ message: "Adj meg emailt és jelszót!" });
     }
 
-    const sql = "SELECT * FROM users WHERE email = ?";
-    db.query(sql, [email], async (err, results) => {
-        if (err) {
-            console.error("SQL Error:", err);
-            return res.status(500).json({ message: "Szerverhiba!" });
-        }
+    try {
+        const sql = "SELECT * FROM users WHERE email = ?";
+        const results = await dbQuery(sql, [email]);
+
         if (results.length === 0) {
-            return res.status(401).json({ message: "Hibás email vagy jelszó!" });
+            return res.status(400).json({ message: "Hibás email vagy jelszó!" });
         }
+
         const user = results[0];
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (!isMatch) {
-            return res.status(401).json({ message: "Hibás email vagy jelszó!" });
+            return res.status(400).json({ message: "Hibás email vagy jelszó!" });
         }
-
 
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
@@ -75,19 +72,30 @@ router.post("/login", (req, res) => {
             { id: user.id, username: user.username },
             process.env.REFRESH_SECRET,
             { expiresIn: "3h" }
-        )
-        
-        activeRefreshTokens.add(refreshToken)
+        );
+
+        activeRefreshTokens.add(refreshToken);
+
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
             secure: true,
             sameSite: "Strict",
             maxAge: 3 * 60 * 60 * 1000,
-        })
-        res.json({ message: "Sikeres bejelentkezés!", token, id: user.id, username: user.username, email: user.email, role: user.role });
-    });
-});
+        });
 
+        res.json({
+            message: "Sikeres bejelentkezés!",
+            token,
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            role: user.role
+        });
+    } catch (error) {
+        console.error("Login hiba:", error);
+        res.status(500).json({ message: "Szerverhiba!" });
+    }
+});
 
 //PROTECTED ROUTE (ADMIN ONLY)
 router.get("/me", authenticateToken, async (req, res) => {
@@ -112,54 +120,63 @@ router.get("/me", authenticateToken, async (req, res) => {
 
 
 //NEW ACCESS TOKEN
-router.post("/refresh", (req, res) => {
-    const oldRefreshToken = req.cookies.refreshToken
-    if (!oldRefreshToken)
-        return res.status(401).json({ error: "No refresh token provided!" })
+router.post("/refresh", async (req, res) => {
+    const oldRefreshToken = req.cookies.refreshToken;
+    if (!oldRefreshToken) {
+        return res.status(401).json({ error: "No refresh token provided!" });
+    }
 
+    if (!activeRefreshTokens.has(oldRefreshToken)) {
+        return res.status(403).json({ error: "Token has been already used or expired!" });
+    }
 
-    if (!activeRefreshTokens.has(oldRefreshToken))
-        return res.status(403).json({ error: "Token has been already used or expired!" })
+    jwt.verify(oldRefreshToken, process.env.REFRESH_SECRET, async (err, user) => {
+        if (err) {
+            return res.status(403).json({ error: "Invalid or expired refresh token!" });
+        }
 
-    jwt.verify(oldRefreshToken, process.env.REFRESH_SECRET, (err, user) => {
-        if (err)
-            return res.status(403).json({ error: "Invalid or expired refresh token!" })
-
-        activeRefreshTokens.delete(oldRefreshToken)
+        activeRefreshTokens.delete(oldRefreshToken);
 
         const newAccessToken = jwt.sign(
             { id: user.id, username: user.username },
             process.env.SECRET_KEY,
             { expiresIn: "15m" }
         );
+
         const newRefreshToken = jwt.sign(
             { id: user.id, username: user.username },
             process.env.REFRESH_SECRET,
             { expiresIn: "7d" }
         );
 
-        activeRefreshTokens.add(newRefreshToken)
+        activeRefreshTokens.add(newRefreshToken);
         res.cookie("refreshToken", newRefreshToken, {
             httpOnly: true,
             secure: true,
             sameSite: "Strict",
             maxAge: 7 * 24 * 60 * 60 * 1000,
-        })
+        });
 
-        const sql_query = "SELECT email,role FROM users WHERE id = ?" 
-        db.query(sql_query,[user.id], async (err, results) => {
-            if (err) {
-                console.error("SQL error:", err)
-                res.status(500).json({ message: "Szerverhiba!" })
-            }
-            if (results.length === 0) {
+        try {
+            const result = await dbQuery("SELECT email, role FROM users WHERE id = ?", [user.id]);
+            if (result.length === 0) {
                 return res.status(401).json({ message: "Nincs felhasználó a rendszerben!" });
             }
 
-            res.json({ token: newAccessToken, id: user.id, username: user.username, email: results[0].email })
-        })
-    })
-})
+            const { email, role } = result[0];
+            res.json({
+                token: newAccessToken,
+                id: user.id,
+                username: user.username,
+                email,
+                role,
+            });
+        } catch (error) {
+            console.error("SQL error:", error);
+            res.status(500).json({ message: "Szerverhiba!" });
+        }
+    });
+});
 
 
 //LOGOUT (IF NEEDED)
