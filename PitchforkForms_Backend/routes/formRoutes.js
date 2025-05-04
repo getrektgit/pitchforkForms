@@ -8,8 +8,8 @@ const notifyUser = require("../utils/notifyUser");
 dotenv.config();
 const router = express.Router();
 
+//A legalább egy diák által kitöltött űrlapok lekérése
 const checkSubmissions = async (forms) => {
-
     let tempForms = []
     for (const index in forms) {
         const element = forms[index]
@@ -19,7 +19,7 @@ const checkSubmissions = async (forms) => {
     return tempForms
 }
 
-//GET /get-basic-info – Az alapadatok lekérése
+//Űrlapadatok lekérése
 router.get("/get-basic-info", authenticateToken, async (req, res) => {
     const { userId } = req.query;
     if (!userId) {
@@ -36,7 +36,7 @@ router.get("/get-basic-info", authenticateToken, async (req, res) => {
     }
 });
 
-//POST /get-all – Egy űrlap összes adatának lekérése
+//Egy űrlap összes adatának lekérése
 router.post("/get-all", authenticateToken, async (req, res) => {
     const { form_id } = req.body;
 
@@ -85,6 +85,7 @@ router.post("/get-all", authenticateToken, async (req, res) => {
     }
 });
 
+//Új űrlap létrehozása
 router.post("/save-forms", authenticateToken, async (req, res) => {
     const { name, questions } = req.body;
 
@@ -138,6 +139,7 @@ router.post("/save-forms", authenticateToken, async (req, res) => {
     });
 });
 
+//Űrlap adatainak frissítése űrlapId alapján
 router.put("/update-form/:id", authenticateToken, async (req, res) => {
     const formId = req.params.id;
     const { name, questions } = req.body;
@@ -153,7 +155,6 @@ router.put("/update-form/:id", authenticateToken, async (req, res) => {
         }
 
         try {
-            // Form név frissítése
             await dbQuery("UPDATE forms SET name = ? WHERE id = ? AND creator_id = ?", [name, formId, req.user.id]);
 
             for (const question of questions) {
@@ -162,16 +163,13 @@ router.put("/update-form/:id", authenticateToken, async (req, res) => {
                 let currentQuestionId = questionId;
 
                 if (currentQuestionId) {
-                    // Kérdés frissítése
                     await dbQuery(
                         "UPDATE questions SET text = ?, type = ?, score = ? WHERE id = ? AND form_id = ?",
                         [text, type, score, currentQuestionId, formId]
                     );
 
-                    // Régi válaszok törlése
                     await dbQuery("DELETE FROM answer_options WHERE question_id = ?", [currentQuestionId]);
                 } else {
-                    // Új kérdés létrehozása
                     const questionResult = await dbQuery(
                         "INSERT INTO questions (text, type, form_id, score) VALUES (?, ?, ?, ?)",
                         [text, type, formId, score]
@@ -179,7 +177,6 @@ router.put("/update-form/:id", authenticateToken, async (req, res) => {
                     currentQuestionId = questionResult.insertId;
                 }
 
-                // Új válaszok beszúrása
                 for (const answer of answers) {
                     const { text, is_right } = answer;
                     await dbQuery(
@@ -207,6 +204,7 @@ router.put("/update-form/:id", authenticateToken, async (req, res) => {
     });
 });
 
+//Egy űrlap kérdéseinek maximális elérhető pontjainak kiszámítása
 const total_Score = async (answers) => {
     let totalScore = 0;
     for (const answerId of answers) {
@@ -243,6 +241,7 @@ const total_Score = async (answers) => {
     return totalScore;
 };
 
+//Válaszok mentése és kiértékelés indítása
 router.post("/submit", authenticateToken, async (req, res) => {
     const { form_id, user_id, answers } = req.body;
 
@@ -290,6 +289,7 @@ router.post("/submit", authenticateToken, async (req, res) => {
     });
 });
 
+//Űrlap kiküldése minden diáknak és emailküldés
 router.post("/send-to-students", authenticateToken, async (req, res) => {
     const { form_id } = req.body;
 
@@ -329,21 +329,19 @@ router.post("/send-to-students", authenticateToken, async (req, res) => {
     }
 });
 
+//Egy űrlap összes adatának lekérése
 router.get("/get-form/:id", authenticateToken, async (req, res) => {
     const formId = req.params.id;
 
     try {
-        // Lekérdezzük az űrlap alapadatait
         const form = await dbQuery("SELECT * FROM forms WHERE id = ?", [formId]);
 
         if (form.length === 0) {
             return res.status(404).json({ message: "Nem található űrlap ezzel az ID-val!" });
         }
 
-        // Lekérdezzük a kérdéseket
         const questions = await dbQuery("SELECT * FROM questions WHERE form_id = ?", [formId]);
 
-        // Minden kérdéshez lekérdezzük a válaszlehetőségeket is
         for (let question of questions) {
             const answers = await dbQuery(
                 "SELECT id, text FROM answer_options WHERE question_id = ?",
@@ -367,11 +365,11 @@ router.get("/get-form/:id", authenticateToken, async (req, res) => {
     }
 });
 
+//Egy diák összes űrlapjának kilistázása az admin oldalon
 router.get('/admin/students-forms/:id', async (req, res) => {
     try {
-        const studentId = req.params.id; // Get the student ID from the URL parameter
+        const studentId = req.params.id;
 
-        // Query to get the student details
         const studentQuery = `
             SELECT id, username, email
             FROM users
@@ -383,7 +381,6 @@ router.get('/admin/students-forms/:id', async (req, res) => {
             return res.status(404).json({ message: "Student not found." });
         }
 
-        // Query to get the forms sent to the student
         const sentForms = await dbQuery(`
             SELECT sf.form_id, sf.sent_at, f.name AS form_name
             FROM sent_forms sf
@@ -391,21 +388,18 @@ router.get('/admin/students-forms/:id', async (req, res) => {
             WHERE sf.user_id = ?
         `, [studentId]);
 
-        // Query to get the submissions made by the student
         const submissions = await dbQuery(`
             SELECT form_id, submit_time, total_score
             FROM submissions
             WHERE user_id = ?
         `, [studentId]);
 
-        // Query to get the maximum points for each form
         const maxPointsForForms = await dbQuery(`
             SELECT q.form_id, SUM(q.score) AS max_points
             FROM questions q
             GROUP BY q.form_id
         `);
 
-        // Map the forms sent to the student with their submission status and scores
         const formsInfo = sentForms.map(sf => {
             const submission = submissions.find(sub => sub.form_id === sf.form_id);
             const maxPoints = maxPointsForForms.find(mp => mp.form_id === sf.form_id)?.max_points || 0;
@@ -428,7 +422,6 @@ router.get('/admin/students-forms/:id', async (req, res) => {
             }
         });
 
-        // Construct the response object
         const studentData = {
             id: student[0].id,
             username: student[0].username,
@@ -444,7 +437,7 @@ router.get('/admin/students-forms/:id', async (req, res) => {
     }
 });
 
-
+//Egy űrlap törlése
 router.delete("/delete-form/:id", authenticateToken, async (req, res) => {
     const formId = req.params.id;
     const userId = req.user.id;
@@ -456,37 +449,30 @@ router.delete("/delete-form/:id", authenticateToken, async (req, res) => {
         }
 
         try {
-            // Ellenőrizzük, hogy a form létezik és a felhasználó a készítője-e
             const form = await dbQuery("SELECT * FROM forms WHERE id = ? AND creator_id = ?", [formId, userId]);
 
             if (form.length === 0) {
                 return res.status(403).json({ message: "Nincs jogosultságod törölni ezt az űrlapot vagy nem létezik." });
             }
 
-            // Törlés a submission_answers táblából
             await dbQuery(`
                 DELETE sa FROM submission_answers sa
                 JOIN submissions s ON sa.submission_id = s.id
                 WHERE s.form_id = ?
             `, [formId]);
 
-            // Törlés a submissions táblából
             await dbQuery("DELETE FROM submissions WHERE form_id = ?", [formId]);
 
-            // Törlés a sent_forms táblából
             await dbQuery("DELETE FROM sent_forms WHERE form_id = ?", [formId]);
 
-            // Törlés a answer_options táblából
             await dbQuery(`
                 DELETE ao FROM answer_options ao
                 JOIN questions q ON ao.question_id = q.id
                 WHERE q.form_id = ?
             `, [formId]);
 
-            // Törlés a questions táblából
             await dbQuery("DELETE FROM questions WHERE form_id = ?", [formId]);
 
-            // Törlés a forms táblából
             await dbQuery("DELETE FROM forms WHERE id = ?", [formId]);
 
             db.commit((err) => {

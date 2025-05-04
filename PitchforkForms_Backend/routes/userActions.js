@@ -9,7 +9,7 @@ dotenv.config()
 const router = express.Router()
 
 
-//LIST ALL USERS EXCEPT ADMINS
+//Kilistáz minden felhasználót az adminon kívül
 router.get("/users", authenticateToken, isAdmin, async (req, res) => {
     const sql_query = "SELECT email, username, role, id, profile_pic FROM users WHERE role != 'admin'";
     try {
@@ -20,7 +20,7 @@ router.get("/users", authenticateToken, isAdmin, async (req, res) => {
     }
 });
 
-//GET USER BY ID
+//Kiliszázza a felhasználó adatait Id alapján
 router.get("/userbyid/:id", authenticateToken, async (req, res) => {
     const userId = req.params.id;
 
@@ -39,7 +39,7 @@ router.get("/userbyid/:id", authenticateToken, async (req, res) => {
     }
 });
 
-//UPDATE USER
+//Frissíti a felhasználó adatait
 router.put("/users/:id", authenticateToken, async (req, res) => {
     const userId = req.params.id;
     const { email, username, profile_pic } = req.body;
@@ -70,7 +70,7 @@ const deleteSentFormsByUserId = async (userId) => {
     const result = await dbQuery(sql, [userId]);
 }
 
-//DELETE USER
+//Törli a felhasználó minden adatát
 router.delete("/users/:id", authenticateToken, async (req, res) => {
     const userId = req.params.id;
 
@@ -90,7 +90,7 @@ router.delete("/users/:id", authenticateToken, async (req, res) => {
     }
 });
 
-// GET INCOMPLETE FORMS FOR USER
+//Nem kitöltött űrlapok kilistázása felhasználóId alpján
 router.get("/pending/:userId", authenticateToken, async (req, res) => {
     const userId = req.params.userId;
 
@@ -119,7 +119,7 @@ router.get("/pending/:userId", authenticateToken, async (req, res) => {
     }
 });
 
-// GET COMPLETED FORMS FOR USER
+//Kitöltött űrlapok kilistázása felhasználóId alpján
 router.get("/forms/completed/:userId", authenticateToken, async (req, res) => {
     const userId = req.params.userId;
 
@@ -157,7 +157,7 @@ router.get("/forms/completed/:userId", authenticateToken, async (req, res) => {
     }
 });
 
-// GET COMPLETED FORM DETAILS FOR USER (with answers)
+//Kilistázza a kitöltött űrlap minden adatát felhasználóId alapján
 router.get("/form/completed/:formId/user/:userId", authenticateToken, async (req, res) => {
     const { formId, userId } = req.params;
 
@@ -166,7 +166,6 @@ router.get("/form/completed/:formId/user/:userId", authenticateToken, async (req
     }
 
     try {
-        // Fetch form questions with their answer options
         const formDetailsQuery = `
             SELECT q.id AS question_id, q.text AS question_text, 
                 ao.id AS answer_option_id, ao.text AS answer_option_text,
@@ -182,15 +181,12 @@ router.get("/form/completed/:formId/user/:userId", authenticateToken, async (req
             WHERE q.form_id = ? AND s.user_id = ?
         `;
 
-        // Fetch the form submission data
         const completedFormDetails = await dbQuery(formDetailsQuery, [formId, userId]);
 
-        // If no form found for the user, return a 404
         if (completedFormDetails.length === 0) {
             return res.status(404).json({ message: "No completed form found for this user" });
         }
 
-        // Process the result to structure the response
         const questions = [];
         completedFormDetails.forEach((row) => {
             let question = questions.find((q) => q.question_id === row.question_id);
@@ -212,7 +208,6 @@ router.get("/form/completed/:formId/user/:userId", authenticateToken, async (req
             });
         });
 
-        // Respond with the structured data
         res.json({ formDetails: questions });
     } catch (error) {
         console.error("Error fetching form details:", error);

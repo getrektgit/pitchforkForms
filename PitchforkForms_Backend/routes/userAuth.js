@@ -14,7 +14,7 @@ router.use(cookieParser());
 const activeRefreshTokens = new Set();
 const SECRET_KEY = process.env.SECRET_KEY;
 
-//REGISTER USER
+//Felhasználó regisztrálása
 router.post("/register", async (req, res) => {
     const { email, username, password, profile_pic } = req.body;
 
@@ -40,7 +40,7 @@ router.post("/register", async (req, res) => {
     }
 });
 
-//LOGIN
+//Bejelentkezés
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -97,7 +97,7 @@ router.post("/login", async (req, res) => {
     }
 });
 
-//PROTECTED ROUTE (ADMIN ONLY)
+//Védett útvonal (Csak admin)
 router.get("/me", authenticateToken, async (req, res) => {
     try {
         const sql_query = "SELECT role FROM users WHERE id = ?";
@@ -119,7 +119,7 @@ router.get("/me", authenticateToken, async (req, res) => {
 });
 
 
-//NEW ACCESS TOKEN
+//Új access token generálása refresh token alapján
 router.post("/refresh", async (req, res) => {
     const oldRefreshToken = req.cookies.refreshToken;
     if (!oldRefreshToken) {
@@ -179,7 +179,7 @@ router.post("/refresh", async (req, res) => {
 });
 
 
-//LOGOUT (IF NEEDED)
+//Kijelentkezés
 router.post("/logout", (req, res) => {
     const refreshToken = req.cookies.refreshToken
     if (refreshToken) activeRefreshTokens.delete(refreshToken)
