@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const authenticateToken = require("../middlewares/authMiddleware");
 const dbQuery = require("../utils/queryHelper")
 const notifyUser = require("../utils/notifyUser");
+const isAdmin = require("../middlewares/roleCheckMiddleware")
 
 dotenv.config();
 const router = express.Router();
@@ -366,7 +367,7 @@ router.get("/get-form/:id", authenticateToken, async (req, res) => {
     }
 });
 
-router.get('/admin/students-forms/:id', authenticateToken, async (req, res) => {
+router.get('/admin/students-forms/:id', authenticateToken, isAdmin, async (req, res) => {
     try {
         const studentId = req.params.id; // Get the student ID from the URL parameter
 
