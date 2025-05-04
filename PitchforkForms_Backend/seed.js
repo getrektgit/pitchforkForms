@@ -84,7 +84,7 @@ const seed = async () => {
     // Seed users
     await connection.query(`
       INSERT INTO users (id, email, username, role, password_hash, profile_pic) VALUES
-      (1, 'balintragats@gmail.com', 'Admin', 'admin', '$2b$10$HByptxncW0r0yY6twKEdvewjbd7cK4VBPySIGI.zgxoEZPvETynTW', NULL),
+      (1, 'pitchforkformsnotify@gmail.com', 'Admin', 'admin', '$2b$10$HByptxncW0r0yY6twKEdvewjbd7cK4VBPySIGI.zgxoEZPvETynTW', NULL),
       (2, 'test@example.com', 'Student', 'student', '$2b$10$tYhRWQEjtTDPtvor1zT6NeFMRaYlyB95mypd4ZqYv2BudZ8UV0t9K', 'asd123');
     `);
 
