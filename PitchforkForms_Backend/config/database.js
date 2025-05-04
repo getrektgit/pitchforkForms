@@ -1,5 +1,6 @@
 const mysql = require("mysql2");
 
+//Adatbáziskapcsolat létrehozása
 const db = mysql.createConnection({
     host: "localhost",
     user: "root",

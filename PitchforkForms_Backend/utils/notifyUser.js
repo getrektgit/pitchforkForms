@@ -44,8 +44,6 @@ async function notifyUser(form_id) {
                 subject: subject,
                 html: text,
             });
-
-            //console.log(`Értesítő email elküldve: ${student.email}`);
         }
     } catch (error) {
         console.error("Email küldési hiba:", error);
