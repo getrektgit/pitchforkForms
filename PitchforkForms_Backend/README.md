@@ -13,7 +13,7 @@ Welcome to the backend of PitchforkForms! This repository contains the server-si
 
 - [Node.js](https://nodejs.org/) (version 14 or higher)
 - [npm](https://www.npmjs.com/)
-- A running instance of your preferred database (e.g., MySQL, MongoDB).
+- MySQL only.
 
 ## Installation
 
@@ -31,7 +31,10 @@ Welcome to the backend of PitchforkForms! This repository contains the server-si
 3. Set up environment variables:
     Create a `.env` file in the root directory and configure the required variables (e.g., database connection string, API keys) based on .env.example.
 
-4. Start the development server:
+4. Start the database server:
+    Open XAMPP and start the Apache server and MySQL
+
+5. Start the development server:
     ```bash
     node server.js
     ```
