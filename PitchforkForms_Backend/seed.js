@@ -31,7 +31,6 @@ const seed = async () => {
         id INT PRIMARY KEY AUTO_INCREMENT,
         name VARCHAR(255) NOT NULL,
         creator_id INT,
-        sent_out BOOLEAN NOT NULL DEFAULT false,
         FOREIGN KEY (creator_id) REFERENCES users(id)
       );
 
@@ -91,9 +90,9 @@ const seed = async () => {
 
     // Seed forms
     await connection.query(`
-      INSERT INTO forms (id, name, creator_id, sent_out) VALUES
-      (1, 'Sample Form A', 1, true),
-      (2, 'Sample Form B', 1, false);
+      INSERT INTO forms (id, name, creator_id) VALUES
+      (1, 'Sample Form A', 1),
+      (2, 'Sample Form B', 1);
     `);
 
     // Seed questions

@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const authenticateToken = require("../middlewares/authMiddleware");
 const dbQuery = require("../utils/queryHelper")
 const notifyUser = require("../utils/notifyUser");
+const isAdmin = require("../middlewares/roleCheckMiddleware")
 
 dotenv.config();
 const router = express.Router();
@@ -321,7 +322,7 @@ router.post("/send-to-students", authenticateToken, async (req, res) => {
         }
         await notifyUser(form_id);
         res.json({
-            message: `A form (ID: ${formData.name}) sikeresen kiküldve ${students.length} tanulónak.`,
+            message: `A form (${formData.name}) sikeresen kiküldve ${students.length} tanulónak.`,
         });
     } catch (error) {
         console.error("Kiküldési hiba:", error);
@@ -355,7 +356,6 @@ router.get("/get-form/:id", authenticateToken, async (req, res) => {
                 id: form[0].id,
                 name: form[0].name,
                 creator_id: form[0].creator_id,
-                sent_out: form[0].sent_out,
                 questions: questions
             }
         });
@@ -365,7 +365,6 @@ router.get("/get-form/:id", authenticateToken, async (req, res) => {
     }
 });
 
-//Egy diák összes űrlapjának kilistázása az admin oldalon
 router.get('/admin/students-forms/:id', async (req, res) => {
     try {
         const studentId = req.params.id;
