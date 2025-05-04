@@ -12,8 +12,8 @@ Welcome to the backend of PitchforkForms! This repository contains the server-si
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (version 14 or higher)
-- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
-- A running instance of your preferred database (e.g., PostgreSQL, MongoDB).
+- [npm](https://www.npmjs.com/)
+- A running instance of your preferred database (e.g., MySQL, MongoDB).
 
 ## Installation
 
@@ -29,17 +29,15 @@ Welcome to the backend of PitchforkForms! This repository contains the server-si
     ```
 
 3. Set up environment variables:
-    Create a `.env` file in the root directory and configure the required variables (e.g., database connection string, API keys).
+    Create a `.env` file in the root directory and configure the required variables (e.g., database connection string, API keys) based on .env.example.
 
 4. Start the development server:
     ```bash
-    npm run dev
+    node server.js
     ```
 
 ## Scripts
 
-- `npm run dev`: Start the development server.
-- `npm run build`: Build the project for production.
 - `node server.js`: Start the production server.
 - `npm test`: Run tests.
 
@@ -49,4 +47,4 @@ We welcome contributions! Please fork the repository and submit a pull request w
 
 ## Support
 
-If you encounter any issues or have questions, feel free to reach out to us at [pitchforkforms@gmail.com](mailto:pitchforkforms@gmail.com).
+If you encounter any issues or have questions, feel free to reach out to us at [pitchforkformsnotify@gmail.com](mailto:pitchforkformsnotify@gmail.com).
