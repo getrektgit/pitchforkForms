@@ -357,7 +357,6 @@ router.get("/get-form/:id", authenticateToken, async (req, res) => {
                 id: form[0].id,
                 name: form[0].name,
                 creator_id: form[0].creator_id,
-                sent_out: form[0].sent_out,
                 questions: questions
             }
         });
@@ -367,7 +366,7 @@ router.get("/get-form/:id", authenticateToken, async (req, res) => {
     }
 });
 
-router.get('/admin/students-forms/:id', async (req, res) => {
+router.get('/admin/students-forms/:id', authenticateToken, async (req, res) => {
     try {
         const studentId = req.params.id; // Get the student ID from the URL parameter
 

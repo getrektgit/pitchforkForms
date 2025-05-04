@@ -134,7 +134,6 @@ router.get("/forms/completed/:userId", authenticateToken, async (req, res) => {
                 f.id AS form_id, 
                 f.name, 
                 f.creator_id, 
-                f.sent_out, 
                 s.submit_time, 
                 s.total_score,
                 COALESCE(qs.max_score, 0) AS max_score
