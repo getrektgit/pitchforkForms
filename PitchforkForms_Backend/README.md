@@ -19,7 +19,7 @@ Welcome to the backend of PitchforkForms! This repository contains the server-si
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/your-repo/pitchforkforms-backend.git
+    git clone https://github.com/getrektgit/pitchforkforms-backend.git
     cd pitchforkforms-backend
     ```
 
