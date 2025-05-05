@@ -70,7 +70,7 @@ const StudentsCompletedFormsPage = () => {
     <Container maxWidth="lg" sx={{ mt: 6 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
         <Typography variant="h4" component="h1" fontWeight={600} color="white">
-          Completed Forms - {studentData.username}
+          Forms sent out to - {studentData.username}
         </Typography>
         <Button variant="outlined" color="inherit" onClick={() => navigate(-1)}>
           Back

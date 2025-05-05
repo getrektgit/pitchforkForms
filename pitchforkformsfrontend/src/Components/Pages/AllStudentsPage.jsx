@@ -135,7 +135,7 @@ const AllStudentsPage = () => {
     <Container maxWidth="lg" sx={{ mt: 6 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
         <Typography variant="h4" component="h1" fontWeight={600} color="white">
-          Student List
+          Students
         </Typography>
       </Stack>
 
