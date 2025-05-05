@@ -1,9 +1,7 @@
 import React, { useState, lazy, Suspense } from 'react';
 import { Box, Typography, Button, Grid, Paper } from '@mui/material';
 
-const Carousel = lazy(() => import('../Carousel'));
-const RegisterModal = lazy(() => import('../RegisterModal'));
-const LoginModal = lazy(() => import('../LoginModal'));
+import carouselpic1 from '../../images/picture.jpg';
 
 const MainPage = () => {
   const [openLogin, setOpenLogin] = useState(false);
@@ -52,9 +50,25 @@ const MainPage = () => {
         and simplify your workflow in minutes.
       </Typography>
 
-      <Suspense fallback={<div>Loading Carousel...</div>}>
-        <Carousel />
-      </Suspense>
+      <Box
+        sx={{
+          mb: 4,
+          maxWidth: '100%',
+          overflow: 'hidden',
+          borderRadius: 2,
+        }}
+      >
+        <img
+          src={carouselpic1}
+          alt="Main Page Image"
+          style={{
+            width: '100%',
+            height: '400px',
+            objectFit: 'cover',
+            borderRadius: '8px',
+          }}
+        />
+      </Box>
 
       <Box sx={{ mt: 5 }}>
         <Button
