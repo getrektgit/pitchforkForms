@@ -13,7 +13,7 @@ Pitchfork Forms is a project designed to simplify and streamline the creation an
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/your-username/pitchforkForms.git
+    git clone https://github.com/getrektgit/pitchforkForms.git
     ```
 2. Navigate to the project directory:
     ```bash
